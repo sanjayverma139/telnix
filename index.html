@@ -226,6 +226,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <script>
 const SB_URL  = "https://nsauxvxopajdsgglcvpk.supabase.co";
 const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zYXV4dnhvcGFqZHNnZ2xjdnBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDYyNDIsImV4cCI6MjA4OTQyMjI0Mn0.YMblltS5nm9TIRRi_ysciAJoO4zljnlTTfJRBONnBxw";
+const SB_SERVICE ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zYXV4dnhvcGFqZHNnZ2xjdnBrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mzg0NjI0MiwiZXhwIjoyMDg5NDIyMjQyfQ.xn-PQEuQwRBMCKqblDiJ28i78z4lttRoGZoggpAZCWk";
 const ORG_ID  = "4c0a98ac-c971-4d04-9e51-655f323b512e";
 
 let accessToken = null;
@@ -236,7 +237,7 @@ async function sbFetch(path, options = {}) {
   const headers = {
     "apikey":       SB_ANON,
     "Content-Type": "application/json",
-    "Authorization": accessToken ? `Bearer ${accessToken}` : `Bearer ${SB_ANON}`,
+    "Authorization": accessToken ? `Bearer ${accessToken}` : `Bearer ${SB_SERVICE}`,
     ...(options.headers || {}),
   };
   return fetch(`${SB_URL}${path}`, { ...options, headers });
