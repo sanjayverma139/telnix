@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telnix Admin Panel</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#060d1a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#e2e8f0;min-height:100vh}
+/* ── Login ── */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.login-card{background:#0d1424;border:1px solid rgba(99,102,241,.25);border-radius:20px;padding:48px 44px;width:420px;box-shadow:0 25px 60px rgba(0,0,0,.5)}
+.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:32px}
+.logo-icon{width:44px;height:44px;background:linear-gradient(135deg,#6366f1,#2563eb);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.logo-name{font-size:22px;font-weight:800}
+.logo-sub{font-size:11px;color:#64748b;letter-spacing:.5px}
+h2{font-size:18px;font-weight:700;margin-bottom:6px}
+.sub{font-size:13px;color:#64748b;margin-bottom:28px}
+label{display:block;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+input[type=email],input[type=password],input[type=text],select,textarea{width:100%;padding:10px 14px;background:#060d1a;border:1.5px solid rgba(99,102,241,.2);border-radius:8px;color:#e2e8f0;font-size:13px;outline:none;transition:border-color .15s;margin-bottom:14px;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:rgba(99,102,241,.6)}
+.btn{padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:opacity .15s}
+.btn:hover{opacity:.88}
+.btn-primary{background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff}
+.btn-danger{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#f87171}
+.btn-sm{padding:5px 12px;font-size:11px}
+.btn-full{width:100%;padding:12px;font-size:14px;font-weight:700;margin-top:4px}
+.error-msg{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:10px 14px;font-size:13px;color:#f87171;margin-top:14px;display:none}
+/* ── App shell ── */
+#app{display:none;flex-direction:row;min-height:100vh}
+.sidebar{width:220px;background:#080f1e;border-right:1px solid rgba(255,255,255,.06);padding:20px 0;flex-shrink:0;display:flex;flex-direction:column}
+.sidebar-logo{padding:0 20px 20px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.sidebar-logo .logo-icon{width:36px;height:36px;font-size:18px}
+.sidebar-logo .logo-name{font-size:18px;font-weight:800}
+.nav-item{padding:10px 20px;font-size:13px;color:#64748b;cursor:pointer;border-radius:0;transition:all .15s;display:flex;align-items:center;gap:8px;margin:1px 8px;border-radius:8px}
+.nav-item:hover{color:#e2e8f0;background:rgba(255,255,255,.04)}
+.nav-item.active{color:#a5b4fc;background:rgba(99,102,241,.12)}
+.sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,.06);font-size:11px;color:#475569}
+.sidebar-user{font-size:12px;color:#94a3b8;margin-bottom:8px;word-break:break-all}
+.main{flex:1;overflow-y:auto;padding:32px 36px}
+.page{display:none}
+.page.active{display:block}
+.page-title{font-size:22px;font-weight:800;color:#e2e8f0;margin-bottom:4px}
+.page-sub{font-size:13px;color:#64748b;margin-bottom:24px}
+/* ── Cards ── */
+.card{background:#0d1424;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:24px;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:16px}
+/* ── Stats row ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat{background:#0d1424;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:20px}
+.stat-num{font-size:32px;font-weight:800;margin-bottom:4px}
+.stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid rgba(255,255,255,.08)}
+table{width:100%;border-collapse:collapse}
+th{background:#0d1424;padding:10px 14px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;text-align:left;border-bottom:1px solid rgba(255,255,255,.08)}
+td{padding:10px 14px;font-size:12px;color:#e2e8f0;border-bottom:1px solid rgba(255,255,255,.04)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase}
+.badge-block{background:rgba(239,68,68,.12);color:#f87171}
+.badge-warn{background:rgba(245,158,11,.12);color:#fbbf24}
+.badge-allow{background:rgba(16,185,129,.12);color:#10b981}
+.badge-browse{background:rgba(96,165,250,.12);color:#60a5fa}
+.badge-download{background:rgba(245,158,11,.12);color:#fbbf24}
+/* ── Users ── */
+.user-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* ── Policy push ── */
+.policy-status{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:8px;padding:12px 16px;font-size:12px;color:#10b981;margin-bottom:16px;display:none}
+/* ── Filters ── */
+.filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.filters input,.filters select{margin-bottom:0;max-width:180px}
+/* ── Loading ── */
+.loading{color:#64748b;font-size:13px;padding:40px;text-align:center}
+/* ── Alert ── */
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none}
+.alert-success{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:#10b981}
+.alert-error{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171}
+</style>
+</head>
+<body>
+
+<!-- ── Login Screen ── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="logo-row">
+      <div class="logo-icon">🛡</div>
+      <div><div class="logo-name">TELNIX</div><div class="logo-sub">ADMIN PANEL</div></div>
+    </div>
+    <h2>Admin Sign In</h2>
+    <p class="sub">Sign in with your administrator account</p>
+    <label>Email Address</label>
+    <input type="email" id="adm-email" placeholder="admin@company.com">
+    <label>Password</label>
+    <input type="password" id="adm-pass" placeholder="Admin password">
+    <button class="btn btn-primary btn-full" id="adm-login-btn">Sign In</button>
+    <div class="error-msg" id="adm-error"></div>
+  </div>
+</div>
+
+<!-- ── App Shell ── -->
+<div id="app">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🛡</div>
+      <div class="logo-name">TELNIX</div>
+    </div>
+    <div class="nav-item active" data-page="dashboard">📊 Dashboard</div>
+    <div class="nav-item" data-page="logs">📋 Activity Logs</div>
+    <div class="nav-item" data-page="users">👥 Users</div>
+    <div class="nav-item" data-page="policies">🛡 Policies</div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="adm-email-display"></div>
+      <button class="btn btn-sm btn-danger" id="adm-logout-btn">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- Dashboard -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Overview of activity across all users — last 24 hours</div>
+      <div class="stats">
+        <div class="stat"><div class="stat-num" id="s-total" style="color:#818cf8">0</div><div class="stat-label">Total Requests</div></div>
+        <div class="stat"><div class="stat-num" id="s-block" style="color:#f87171">0</div><div class="stat-label">Blocked</div></div>
+        <div class="stat"><div class="stat-num" id="s-warn"  style="color:#fbbf24">0</div><div class="stat-label">Warned</div></div>
+        <div class="stat"><div class="stat-num" id="s-users" style="color:#10b981">0</div><div class="stat-label">Active Users</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Recent Activity</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Time</th><th>User</th><th>Domain</th><th>Activity</th><th>Action</th><th>Policy</th></tr></thead>
+            <tbody id="dash-logs"><tr><td colspan="6" class="loading">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logs -->
+    <div class="page" id="page-logs">
+      <div class="page-title">Activity Logs</div>
+      <div class="page-sub">All user activity across your organisation</div>
+      <div class="filters">
+        <input type="text"  id="log-search"  placeholder="Search domain, user..." oninput="loadLogs()">
+        <select id="log-action" onchange="loadLogs()">
+          <option value="">All Actions</option>
+          <option value="block">Block</option>
+          <option value="warn">Warn</option>
+          <option value="allow">Allow</option>
+        </select>
+        <select id="log-activity" onchange="loadLogs()">
+          <option value="">All Activities</option>
+          <option value="browse">Browse</option>
+          <option value="download">Download</option>
+        </select>
+        <input type="text" id="log-user" placeholder="Filter by email..." oninput="loadLogs()">
+        <button class="btn btn-primary btn-sm" onclick="loadLogs()">🔄 Refresh</button>
+        <button class="btn btn-sm" onclick="exportLogs()" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);color:#a5b4fc">⬇ Export CSV</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Time</th><th>User</th><th>Domain</th><th>Activity</th><th>Action</th><th>Category</th><th>Policy</th><th>File</th></tr></thead>
+          <tbody id="logs-tbody"><tr><td colspan="8" class="loading">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Users -->
+    <div class="page" id="page-users">
+      <div class="page-title">Users</div>
+      <div class="page-sub">Manage who can use Telnix on their browser</div>
+      <div class="card">
+        <div class="card-title">Create New User</div>
+        <div id="user-alert" class="alert"></div>
+        <div class="user-form">
+          <div>
+            <label>Email Address *</label>
+            <input type="email" id="new-email" placeholder="user@company.com">
+          </div>
+          <div>
+            <label>Password *</label>
+            <input type="password" id="new-pass" placeholder="Set a password">
+          </div>
+        </div>
+        <button class="btn btn-primary" id="create-user-btn">+ Create User</button>
+      </div>
+      <div class="card">
+        <div class="card-title">All Users</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Email</th><th>Created</th><th>Last Active</th><th>Total Logs</th><th></th></tr></thead>
+            <tbody id="users-tbody"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Policies -->
+    <div class="page" id="page-policies">
+      <div class="page-title">Policy Management</div>
+      <div class="page-sub">Push policies to all connected Telnix extensions</div>
+      <div class="card">
+        <div class="card-title">Policy Sync</div>
+        <p style="font-size:13px;color:#94a3b8;margin-bottom:16px">
+          Policies are managed in the <strong style="color:#a5b4fc">Telnix Chrome extension</strong> (options page). 
+          Once you configure policies in the extension, click <strong style="color:#fbbf24">Push to Cloud</strong> to 
+          publish them to all users. All extensions sync automatically every 5 minutes.
+        </p>
+        <div class="policy-status" id="policy-status"></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary" id="btn-pull-policies">⬇ Pull from Extension</button>
+          <span style="font-size:12px;color:#475569">Last synced: <span id="last-sync">Never</span></span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Current Policy Summary</div>
+        <div id="policy-summary" class="loading">Loading...</div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+const SB_URL  = "https://nsauxvxopajdsgglcvpk.supabase.co";
+const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zYXV4dnhvcGFqZHNnZ2xjdnBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDYyNDIsImV4cCI6MjA4OTQyMjI0Mn0.YMblltS5nm9TIRRi_ysciAJoO4zljnlTTfJRBONnBxw";
+const ORG_ID  = "4c0a98ac-c971-4d04-9e51-655f323b512e";
+
+let accessToken = null;
+let adminEmail  = null;
+
+// ── Auth helpers ──────────────────────────────────────────────────────────────
+async function sbFetch(path, options = {}) {
+  const headers = {
+    "apikey":       SB_ANON,
+    "Content-Type": "application/json",
+    "Authorization": accessToken ? `Bearer ${accessToken}` : `Bearer ${SB_ANON}`,
+    ...(options.headers || {}),
+  };
+  return fetch(`${SB_URL}${path}`, { ...options, headers });
+}
+
+function esc(str) { const d = document.createElement('div'); d.textContent = str || ""; return d.innerHTML; }
+function fmtTime(ts) { return new Date(ts).toLocaleString(); }
+function fmtTimeShort(ts) { return new Date(ts).toLocaleTimeString(); }
+
+// ── Login ─────────────────────────────────────────────────────────────────────
+document.getElementById("adm-login-btn").onclick = async () => {
+  const email = document.getElementById("adm-email").value.trim();
+  const pass  = document.getElementById("adm-pass").value;
+  const errEl = document.getElementById("adm-error");
+  const btn   = document.getElementById("adm-login-btn");
+  errEl.style.display = "none";
+  btn.disabled = true; btn.textContent = "Signing in...";
+
+  try {
+    const res  = await fetch(`${SB_URL}/auth/v1/token?grant_type=password`, {
+      method:  "POST",
+      headers: { "apikey": SB_ANON, "Content-Type": "application/json" },
+      body:    JSON.stringify({ email, password: pass }),
+    });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.error_description || "Invalid credentials"; errEl.style.display="block"; btn.disabled=false; btn.textContent="Sign In"; return; }
+    accessToken = data.access_token;
+    adminEmail  = data.user.email;
+    document.getElementById("adm-email-display").textContent = adminEmail;
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app").style.display = "flex";
+    showPage("dashboard");
+    loadDashboard();
+  } catch(e) {
+    errEl.textContent = "Connection error. Please try again.";
+    errEl.style.display = "block";
+    btn.disabled = false; btn.textContent = "Sign In";
+  }
+};
+
+document.getElementById("adm-email").addEventListener("keydown", e => { if(e.key==="Enter") document.getElementById("adm-pass").focus(); });
+document.getElementById("adm-pass").addEventListener("keydown",  e => { if(e.key==="Enter") document.getElementById("adm-login-btn").click(); });
+
+document.getElementById("adm-logout-btn").onclick = async () => {
+  await fetch(`${SB_URL}/auth/v1/logout`, { method:"POST", headers:{ "apikey":SB_ANON,"Authorization":`Bearer ${accessToken}` } }).catch(()=>{});
+  accessToken = null;
+  document.getElementById("app").style.display = "none";
+  document.getElementById("login-screen").style.display = "flex";
+};
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.page === id));
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");
+  if (id==="logs")     loadLogs();
+  if (id==="users")    loadUsers();
+  if (id==="policies") loadPolicySummary();
+}
+document.querySelectorAll(".nav-item").forEach(n => n.onclick = () => showPage(n.dataset.page));
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const since = Date.now() - 86400000;
+  const res   = await sbFetch(`/rest/v1/activity_logs?org_id=eq.${ORG_ID}&ts=gte.${since}&order=ts.desc&limit=200`);
+  if (!res.ok) return;
+  const logs  = await res.json();
+
+  document.getElementById("s-total").textContent = logs.length;
+  document.getElementById("s-block").textContent = logs.filter(l=>l.action==="block").length;
+  document.getElementById("s-warn").textContent  = logs.filter(l=>l.action==="warn").length;
+  const users = new Set(logs.map(l=>l.user_email).filter(Boolean));
+  document.getElementById("s-users").textContent = users.size;
+
+  const tbody = document.getElementById("dash-logs");
+  tbody.innerHTML = logs.slice(0,20).map(l => `<tr>
+    <td style="color:#64748b;font-size:11px">${fmtTimeShort(l.ts)}</td>
+    <td style="color:#a5b4fc">${esc(l.user_email||"—")}</td>
+    <td style="font-weight:600">${esc(l.domain||"—")}</td>
+    <td><span class="badge badge-${l.activity||"browse"}">${l.activity||"browse"}</span></td>
+    <td><span class="badge badge-${l.action}">${l.action}</span></td>
+    <td style="color:#64748b;font-size:11px">${esc(l.policy_name||l.reason||"—")}</td>
+  </tr>`).join("") || `<tr><td colspan="6" class="loading">No activity in last 24 hours</td></tr>`;
+}
+
+// ── Logs ──────────────────────────────────────────────────────────────────────
+let allLogs = [];
+async function loadLogs() {
+  const search   = document.getElementById("log-search").value.trim().toLowerCase();
+  const actionF  = document.getElementById("log-action").value;
+  const activityF= document.getElementById("log-activity").value;
+  const userF    = document.getElementById("log-user").value.trim().toLowerCase();
+
+  let url = `/rest/v1/activity_logs?org_id=eq.${ORG_ID}&order=ts.desc&limit=500`;
+  if (actionF)   url += `&action=eq.${actionF}`;
+  if (activityF) url += `&activity=eq.${activityF}`;
+
+  const res  = await sbFetch(url);
+  if (!res.ok) return;
+  let logs = await res.json();
+
+  if (search) logs = logs.filter(l => (l.domain||"").includes(search)||(l.url||"").includes(search)||(l.user_email||"").includes(search));
+  if (userF)  logs = logs.filter(l => (l.user_email||"").toLowerCase().includes(userF));
+
+  allLogs = logs;
+  const tbody = document.getElementById("logs-tbody");
+  tbody.innerHTML = logs.map(l => `<tr>
+    <td style="color:#64748b;font-size:11px;white-space:nowrap">${fmtTimeShort(l.ts)}</td>
+    <td style="color:#a5b4fc;font-size:12px">${esc(l.user_email||"—")}</td>
+    <td style="font-weight:600;font-size:12px">${esc(l.domain||"—")}</td>
+    <td><span class="badge badge-${l.activity||"browse"}">${l.activity||"browse"}</span></td>
+    <td><span class="badge badge-${l.action}">${l.action}</span></td>
+    <td style="color:#64748b;font-size:11px">${esc(l.category||"—")}</td>
+    <td style="color:#94a3b8;font-size:11px">${esc(l.policy_name||"—")}</td>
+    <td style="font-size:11px;color:#fbbf24">${esc(l.download_filename||"")}</td>
+  </tr>`).join("") || `<tr><td colspan="8" class="loading">No logs found</td></tr>`;
+}
+
+function exportLogs() {
+  if (!allLogs.length) return;
+  const headers = ["Time","User","Domain","Activity","Action","Category","Policy","File","URL"];
+  const rows    = allLogs.map(l => [
+    new Date(l.ts).toISOString(), l.user_email||"", l.domain||"",
+    l.activity||"", l.action||"", l.category||"",
+    l.policy_name||"", l.download_filename||"", (l.url||"").slice(0,200)
+  ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(","));
+  const csv  = [headers.join(","), ...rows].join("\n");
+  const blob = new Blob([csv], {type:"text/csv"});
+  const a    = document.createElement("a");
+  a.href     = URL.createObjectURL(blob);
+  a.download = `telnix-logs-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ── Users ─────────────────────────────────────────────────────────────────────
+async function loadUsers() {
+  // Get all unique emails from logs + created users
+  const res  = await sbFetch(`/rest/v1/activity_logs?org_id=eq.${ORG_ID}&select=user_email,ts&order=ts.desc`);
+  const logs  = res.ok ? await res.json() : [];
+
+  // Aggregate by user
+  const userMap = {};
+  for (const l of logs) {
+    const e = l.user_email;
+    if (!e) continue;
+    if (!userMap[e]) userMap[e] = { count: 0, lastTs: 0 };
+    userMap[e].count++;
+    if (l.ts > userMap[e].lastTs) userMap[e].lastTs = l.ts;
+  }
+
+  const tbody = document.getElementById("users-tbody");
+  const users = Object.entries(userMap);
+  tbody.innerHTML = users.map(([email, info]) => `<tr>
+    <td style="color:#a5b4fc">${esc(email)}</td>
+    <td style="color:#64748b;font-size:11px">—</td>
+    <td style="color:#64748b;font-size:11px">${info.lastTs ? fmtTime(info.lastTs) : "Never"}</td>
+    <td style="font-weight:700;color:#e2e8f0">${info.count}</td>
+    <td><button class="btn btn-sm" onclick="filterUserLogs('${esc(email)}')" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);color:#a5b4fc">View Logs</button></td>
+  </tr>`).join("") || `<tr><td colspan="5" class="loading">No users have logged in yet</td></tr>`;
+}
+
+function filterUserLogs(email) {
+  showPage("logs");
+  document.getElementById("log-user").value = email;
+  loadLogs();
+}
+
+document.getElementById("create-user-btn").onclick = async () => {
+  const email = document.getElementById("new-email").value.trim();
+  const pass  = document.getElementById("new-pass").value;
+  const al    = document.getElementById("user-alert");
+  al.style.display = "none";
+
+  if (!email || !pass) { al.className="alert alert-error"; al.textContent="Email and password required"; al.style.display="block"; return; }
+
+  // Create user via Supabase Admin API — requires service_role key
+  // Since we only have anon key, we use signUp endpoint
+  const res  = await fetch(`${SB_URL}/auth/v1/admin/users`, {
+    method:  "POST",
+    headers: { "apikey": SB_ANON, "Authorization":`Bearer ${accessToken}`, "Content-Type":"application/json" },
+    body:    JSON.stringify({ email, password: pass, email_confirm: true }),
+  });
+  const data = await res.json();
+  if (res.ok) {
+    al.className="alert alert-success"; al.textContent=`✓ User ${email} created successfully`;
+    document.getElementById("new-email").value = "";
+    document.getElementById("new-pass").value  = "";
+    loadUsers();
+  } else {
+    al.className="alert alert-error"; al.textContent = data.msg || data.error || "Failed to create user";
+  }
+  al.style.display = "block";
+};
+
+// ── Policy Summary ────────────────────────────────────────────────────────────
+async function loadPolicySummary() {
+  const res  = await sbFetch(`/rest/v1/policies?org_id=eq.${ORG_ID}&order=updated_at.desc&limit=1`);
+  const rows = res.ok ? await res.json() : [];
+  const el   = document.getElementById("policy-summary");
+
+  if (!rows.length) {
+    el.innerHTML = `<div style="color:#64748b;font-size:13px">No policies pushed to cloud yet. Configure policies in the Telnix extension, then use <strong style="color:#a5b4fc">Pull from Extension</strong> to push them here.</div>`;
+    return;
+  }
+
+  const p    = rows[0].payload || {};
+  const pols = p.orderedPolicies || [];
+  const grps = p.policyGroups    || [];
+  const lists= p.urlLists        || [];
+  const sets = p.policySettings  || {};
+  const syncTime = new Date(rows[0].updated_at || Date.now()).toLocaleString();
+  document.getElementById("last-sync").textContent = syncTime;
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px">
+      <div style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:28px;font-weight:800;color:#a5b4fc">${pols.length}</div>
+        <div style="font-size:11px;color:#64748b">Policies</div>
+      </div>
+      <div style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:28px;font-weight:800;color:#a5b4fc">${grps.length}</div>
+        <div style="font-size:11px;color:#64748b">Groups</div>
+      </div>
+      <div style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:28px;font-weight:800;color:#a5b4fc">${lists.length}</div>
+        <div style="font-size:11px;color:#64748b">URL Lists</div>
+      </div>
+      <div style="background:rgba(${sets.defaultAction==='block'?'239,68,68':sets.defaultAction==='warn'?'245,158,11':'16,185,129'},.08);border:1px solid rgba(${sets.defaultAction==='block'?'239,68,68':sets.defaultAction==='warn'?'245,158,11':'16,185,129'},.2);border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:18px;font-weight:800;color:${sets.defaultAction==='block'?'#f87171':sets.defaultAction==='warn'?'#fbbf24':'#10b981'};text-transform:uppercase">${sets.defaultAction||'allow'}</div>
+        <div style="font-size:11px;color:#64748b">Default Action</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#475569">Last updated: ${syncTime}</div>
+  `;
+}
+
+document.getElementById("btn-pull-policies").onclick = async () => {
+  const btn  = document.getElementById("btn-pull-policies");
+  const stat = document.getElementById("policy-status");
+  btn.disabled = true; btn.textContent = "Syncing...";
+  stat.style.display = "none";
+
+  // This button tells the admin: "go to the extension, apply your policies,
+  // the extension will push them to Supabase automatically."
+  // We show instructions since admin panel can't directly read extension storage.
+  stat.textContent = "✓ To push policies: open the Telnix extension options page, configure your policies, then click Apply. The extension will automatically sync to Supabase within 5 minutes. Or use the extension's Push Logs button to sync immediately.";
+  stat.style.display = "block";
+  btn.disabled = false; btn.textContent = "⬇ Pull from Extension";
+  setTimeout(() => loadPolicySummary(), 2000);
+};
+
+// Auto-refresh dashboard every 30s when visible
+setInterval(() => {
+  const dashPage = document.getElementById("page-dashboard");
+  if (dashPage && dashPage.classList.contains("active") && accessToken) loadDashboard();
+}, 30000);
+</script>
+</body>
+</html>
