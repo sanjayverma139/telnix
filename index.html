@@ -445,7 +445,7 @@ async function loadData() {
 // FIX: Use upsert (POST with merge-duplicates) instead of check+PATCH/POST
 // Uses the authenticated user's JWT — RLS policy allows this
 async function saveData() {
-  const r = await sbf(`/rest/v1/policies`, {
+  const r = await sbf(`/rest/v1/policies?on_conflict=org_id`, {
     method: 'POST',
     headers: {"Prefer":"resolution=merge-duplicates,return=minimal"},
     body: JSON.stringify({org_id:ORG, payload:D, version:Date.now(), updated_at:new Date().toISOString()})
