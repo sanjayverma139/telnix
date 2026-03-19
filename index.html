@@ -445,13 +445,38 @@ async function loadData() {
 // FIX: Use upsert (POST with merge-duplicates) instead of check+PATCH/POST
 // Uses the authenticated user's JWT — RLS policy allows this
 async function saveData() {
-  const r = await sbf(`/rest/v1/policies?on_conflict=org_id`, {
-    method: 'POST',
-    headers: {"Prefer":"resolution=merge-duplicates,return=minimal"},
-    body: JSON.stringify({org_id:ORG, payload:D, version:Date.now(), updated_at:new Date().toISOString()})
-  });
+  // Step 1: check if row exists
+  const check = await sbf(`/rest/v1/policies?org_id=eq.${ORG}&select=id`);
+  const rows  = check.ok ? await check.json() : [];
+
+  let r;
+  if (rows.length > 0) {
+    // Row exists — PATCH it
+    r = await sbf(`/rest/v1/policies?org_id=eq.${ORG}`, {
+      method: 'PATCH',
+      headers: {"Prefer": "return=minimal"},
+      body: JSON.stringify({
+        payload:    D,
+        version:    Date.now(),
+        updated_at: new Date().toISOString()
+      })
+    });
+  } else {
+    // No row yet — INSERT
+    r = await sbf(`/rest/v1/policies`, {
+      method: 'POST',
+      headers: {"Prefer": "return=minimal"},
+      body: JSON.stringify({
+        org_id:     ORG,
+        payload:    D,
+        version:    Date.now(),
+        updated_at: new Date().toISOString()
+      })
+    });
+  }
+
   if (!r.ok) {
-    const t = await r.text().catch(()=>'');
+    const t = await r.text().catch(() => '');
     console.error('Push failed:', r.status, t);
   }
   return r.ok;
