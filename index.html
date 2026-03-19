@@ -350,31 +350,52 @@ document.querySelectorAll('.nav').forEach(n=>n.onclick=()=>showPage(n.dataset.pa
 
 // Load data
 async function loadData(){
-  const r=await sbf(`/rest/v1/policies?org_id=eq.${ORG}&order=updated_at.desc&limit=1`);
-  if(!r.ok)return;const rows=await r.json();
-  if(rows.length&&rows[0].payload){const p=rows[0].payload;
-    D.orderedPolicies=p.orderedPolicies||[];D.policyGroups=p.policyGroups||[];
-    D.urlLists=p.urlLists||[];D.customCategories=p.customCategories||[];
-    D.policySettings=p.policySettings||{defaultAction:'allow'};
-    D.fileTypeLists=p.fileTypeLists||[];D.bypassTokens=p.bypassTokens||[];
-    $('def-action').value=D.policySettings.defaultAction||'allow';}
+  try {
+    const r=await sbf(`/rest/v1/policies?org_id=eq.${ORG}&order=updated_at.desc&limit=1`);
+    if(!r.ok){ console.warn('Load policies failed:', r.status); }
+    else {
+      const rows=await r.json();
+      if(rows.length&&rows[0].payload){const p=rows[0].payload;
+        D.orderedPolicies=p.orderedPolicies||[];D.policyGroups=p.policyGroups||[];
+        D.urlLists=p.urlLists||[];D.customCategories=p.customCategories||[];
+        D.policySettings=p.policySettings||{defaultAction:'allow'};
+        D.fileTypeLists=p.fileTypeLists||[];D.bypassTokens=p.bypassTokens||[];
+        $('def-action').value=D.policySettings.defaultAction||'allow';
+      }
+    }
+  } catch(e){ console.warn('loadData error:', e); }
   if(!D.policyGroups.find(g=>g.name==='Default'))D.policyGroups.push({id:'grp_def_'+Date.now(),name:'Default',_isDefault:true,policyIds:[]});
 }
 async function saveData(){
-  const r=await sbf(`/rest/v1/policies?org_id=eq.${ORG}`,{method:'POST',headers:{"Prefer":"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({org_id:ORG,payload:D,version:Date.now()})});
+  // Always use service role key for writes to bypass RLS
+  const h={"apikey":SVC,"Authorization":`Bearer ${SVC}`,"Content-Type":"application/json"};
+  // Check if row exists
+  const chk=await fetch(`${SB}/rest/v1/policies?org_id=eq.${ORG}&select=id`,{headers:h});
+  const rows=chk.ok?await chk.json():[];
+  let r;
+  if(rows.length>0){
+    r=await fetch(`${SB}/rest/v1/policies?org_id=eq.${ORG}`,{method:'PATCH',headers:{...h,"Prefer":"return=minimal"},body:JSON.stringify({payload:D,version:Date.now(),updated_at:new Date().toISOString()})});
+  }else{
+    r=await fetch(`${SB}/rest/v1/policies`,{method:'POST',headers:{...h,"Prefer":"return=minimal"},body:JSON.stringify({org_id:ORG,payload:D,version:Date.now()})});
+  }
+  if(!r.ok){const t=await r.text().catch(()=>'');console.error('Push failed:',r.status,t);}
   return r.ok;
 }
 async function pushAll(){
   const btn=$('push-btn');btn.disabled=true;btn.textContent='Pushing...';
-  const ok=await saveData();
-  showAl('pol-al',ok?'success':'error',ok?'✓ Pushed to all users — sync within 1 min':'Failed to push');
+  try {
+    const ok=await saveData();
+    showAl('pol-al',ok?'success':'error',ok?'✓ Policies pushed — all users will sync within 1 minute':'Failed to push — check Supabase RLS policies');
+  } catch(e) {
+    showAl('pol-al','error','Error: '+e.message);
+  }
   btn.disabled=false;btn.textContent='☁ Push to Users';
 }
 
 // Dashboard
 async function loadDash(){
   const since=Date.now()-86400000;
-  const r=await sbf(`/rest/v1/activity_logs?org_id=eq.${ORG}&ts=gte.${since}&order=ts.desc&limit=300`);
+  const r=await fetch(`${SB}/rest/v1/activity_logs?org_id=eq.${ORG}&ts=gte.${since}&order=ts.desc&limit=300`,{headers:{"apikey":SVC,"Authorization":`Bearer ${SVC}`,"Content-Type":"application/json"}});
   if(!r.ok)return;const logs=await r.json();
   $('s-t').textContent=logs.length;$('s-b').textContent=logs.filter(l=>l.action==='block').length;
   $('s-w').textContent=logs.filter(l=>l.action==='warn').length;
@@ -477,7 +498,26 @@ function saveCat(){const name=$('cm-name').value.trim();if(!name){showAl('cm-al'
 function delCat(id){if(!confirm('Delete?'))return;D.customCategories=D.customCategories.filter(c=>c.id!==id);renderCats();}
 
 // Users
-async function loadUsers(){const r=await sbf(`/rest/v1/activity_logs?org_id=eq.${ORG}&select=user_email,ts&order=ts.desc`);const logs=r.ok?await r.json():[];const map={};for(const l of logs){if(!l.user_email)continue;if(!map[l.user_email]){map[l.user_email]={count:0,last:0};}map[l.user_email].count++;if(l.ts>map[l.user_email].last)map[l.user_email].last=l.ts;}$('users-tb').innerHTML=Object.entries(map).map(([email,info])=>`<tr><td style="color:#a5b4fc">${esc(email)}</td><td style="color:#64748b;font-size:11px">${info.last?fmtF(info.last):'Never'}</td><td style="font-weight:700">${info.count}</td><td><button class="btn btn-sm btn-ghost" onclick="filterUser('${esc(email)}')">View Logs</button></td></tr>`).join('')||'<tr><td colspan="4" class="loading">No users yet</td></tr>';}
+async function loadUsers(){
+  // Get users from Supabase Auth
+  const ur=await fetch(`${SB}/auth/v1/admin/users?per_page=100`,{headers:{"apikey":SVC,"Authorization":`Bearer ${SVC}`}});
+  const authUsers=ur.ok?(await ur.json()).users||[]:[];
+  // Get activity log counts per user
+  const lr=await fetch(`${SB}/rest/v1/activity_logs?org_id=eq.${ORG}&select=user_email,ts&order=ts.desc`,{headers:{"apikey":SVC,"Authorization":`Bearer ${SVC}`,"Content-Type":"application/json"}});
+  const logs=lr.ok?await lr.json():[];
+  const map={};for(const l of logs){if(!l.user_email)continue;if(!map[l.user_email]){map[l.user_email]={count:0,last:0};}map[l.user_email].count++;if(l.ts>map[l.user_email].last)map[l.user_email].last=l.ts;}
+  if(authUsers.length){
+    $('users-tb').innerHTML=authUsers.map(u=>`<tr><td style="color:#a5b4fc">${esc(u.email)}</td><td style="color:#64748b;font-size:11px">${u.last_sign_in_at?fmtF(new Date(u.last_sign_in_at).getTime()):'Never'}</td><td style="font-weight:700">${map[u.email]?.count||0}</td><td><button class="btn btn-sm btn-ghost" onclick="filterUser('${esc(u.email)}')">Logs</button><button class="btn btn-sm btn-danger" style="margin-left:6px" onclick="deleteUser('${u.id}','${esc(u.email)}')">Del</button></td></tr>`).join('');
+  } else {
+    $('users-tb').innerHTML=Object.entries(map).map(([email,info])=>`<tr><td style="color:#a5b4fc">${esc(email)}</td><td style="color:#64748b;font-size:11px">${info.last?fmtF(info.last):'Never'}</td><td style="font-weight:700">${info.count}</td><td><button class="btn btn-sm btn-ghost" onclick="filterUser('${esc(email)}')">Logs</button></td></tr>`).join('')||'<tr><td colspan="4" class="loading">No users yet</td></tr>';
+  }
+}
+async function deleteUser(id,email){
+  if(!confirm(`Delete user ${email}? This cannot be undone.`))return;
+  const r=await fetch(`${SB}/auth/v1/admin/users/${id}`,{method:'DELETE',headers:{"apikey":SVC,"Authorization":`Bearer ${SVC}`}});
+  if(r.ok){showAl('u-al','success',`✓ User ${email} deleted`);loadUsers();}
+  else showAl('u-al','error','Failed to delete user');
+}
 function filterUser(e){$('f-u').value=e;showPage('logs');}
 async function createUser(){const e=$('u-email').value.trim(),p=$('u-pass').value;if(!e||!p){showAl('u-al','error','Email and password required');return;}const r=await fetch(`${SB}/auth/v1/admin/users`,{method:'POST',headers:{"apikey":SVC,"Authorization":`Bearer ${SVC}`,"Content-Type":"application/json"},body:JSON.stringify({email:e,password:p,email_confirm:true})});const d=await r.json();if(r.ok){showAl('u-al','success',`✓ User ${e} created`);$('u-email').value='';$('u-pass').value='';loadUsers();}else showAl('u-al','error',d.msg||d.error||'Failed');}
 
