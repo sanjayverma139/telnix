@@ -1,266 +1,290 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Telnix Admin Panel</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#060d1a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#e2e8f0;min-height:100vh}
-#login-screen{display:flex;align-items:center;justify-content:min-height:100vh}
-#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh}
-.login-card{background:#0d1424;border:1px solid rgba(99,102,241,.25);border-radius:20px;padding:48px 44px;width:420px;box-shadow:0 25px 60px rgba(0,0,0,.5)}
-.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:32px}
-.logo-icon{width:44px;height:44px;background:linear-gradient(135deg,#6366f1,#2563eb);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
-.logo-name{font-size:22px;font-weight:800}.logo-sub{font-size:11px;color:#64748b;letter-spacing:.5px}
-h2{font-size:18px;font-weight:700;margin-bottom:6px}.sub{font-size:13px;color:#64748b;margin-bottom:28px}
-label{display:block;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
-input,select,textarea{width:100%;padding:10px 14px;background:#060d1a;border:1.5px solid rgba(99,102,241,.2);border-radius:8px;color:#e2e8f0;font-size:13px;outline:none;transition:border-color .15s;margin-bottom:14px;font-family:inherit}
-input:focus,select:focus,textarea:focus{border-color:rgba(99,102,241,.6)}
-textarea{resize:vertical;min-height:100px;line-height:1.6}
-.btn{padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:opacity .15s;display:inline-flex;align-items:center;gap:6px}
-.btn:hover{opacity:.88}.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn-primary{background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff}
-.btn-danger{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#f87171}
-.btn-success{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#10b981}
-.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,.1);color:#94a3b8}
-.btn-sm{padding:5px 12px;font-size:11px}
-.btn-full{width:100%;padding:12px;font-size:14px;font-weight:700;margin-top:4px;justify-content:center}
-.err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:10px 14px;font-size:13px;color:#f87171;margin-top:12px;display:none}
-#app{display:none;flex-direction:row;min-height:100vh}
-.sidebar{width:230px;background:#080f1e;border-right:1px solid rgba(255,255,255,.06);padding:20px 0;flex-shrink:0;display:flex;flex-direction:column}
-.sb-logo{padding:0 18px 18px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:10px;display:flex;align-items:center;gap:10px}
-.sb-logo .logo-icon{width:36px;height:36px;font-size:18px}.sb-logo .logo-name{font-size:18px;font-weight:800}
-.sb-section{font-size:9px;color:#374151;text-transform:uppercase;letter-spacing:.8px;padding:14px 18px 4px;font-weight:700}
-.nav{padding:8px;font-size:13px;color:#64748b;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:8px;margin:1px 6px;border-radius:8px}
-.nav:hover{color:#e2e8f0;background:rgba(255,255,255,.04)}.nav.active{color:#a5b4fc;background:rgba(99,102,241,.12)}
-.sb-footer{margin-top:auto;padding:14px 16px;border-top:1px solid rgba(255,255,255,.06)}
-.sb-user{font-size:12px;color:#94a3b8;margin-bottom:8px;word-break:break-all}
-.main{flex:1;overflow-y:auto;padding:28px 32px}
-.page{display:none}.page.active{display:block}
-.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
-.page-title{font-size:22px;font-weight:800;color:#e2e8f0;margin-bottom:4px}
-.page-sub{font-size:13px;color:#64748b}
-.card{background:#0d1424;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:22px;margin-bottom:16px}
-.card-title{font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:16px}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
-.stat{background:#0d1424;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:18px}
-.stat-num{font-size:30px;font-weight:800;margin-bottom:4px}.stat-lbl{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
-.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid rgba(255,255,255,.08)}
-table{width:100%;border-collapse:collapse}
-th{background:#0d1424;padding:10px 14px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;text-align:left;border-bottom:1px solid rgba(255,255,255,.08);white-space:nowrap}
-td{padding:10px 14px;font-size:12px;color:#e2e8f0;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
-tr:last-child td{border-bottom:none}tr:hover td{background:rgba(255,255,255,.02)}
-.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase}
-.badge-block{background:rgba(239,68,68,.12);color:#f87171}
-.badge-warn{background:rgba(245,158,11,.12);color:#fbbf24}
-.badge-allow{background:rgba(16,185,129,.12);color:#10b981}
-.badge-browse{background:rgba(96,165,250,.12);color:#60a5fa}
-.badge-download{background:rgba(245,158,11,.12);color:#fbbf24}
-.loading{color:#64748b;font-size:13px;padding:40px;text-align:center}
-.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none}
-.alert-s{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:#10b981}
-.alert-e{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171}
-.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-.filters input,.filters select{margin-bottom:0;max-width:170px}
-.pol-group{background:#0a1120;border:1px solid rgba(255,255,255,.06);border-radius:12px;margin-bottom:14px}
-.pol-group-hdr{display:flex;align-items:center;gap:10px;padding:12px 16px}
-.pol-group-name{font-size:13px;font-weight:700;color:#a5b4fc;flex:1}
-.pol-row{display:grid;grid-template-columns:1fr auto auto auto auto auto;gap:10px;align-items:center;padding:10px 16px;border-top:1px solid rgba(255,255,255,.04)}
-.pol-name{font-size:13px;font-weight:600;color:#e2e8f0}
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center;overflow-y:auto;padding:20px}
-.modal-bg.open{display:flex}
-.modal{background:#0d1424;border:1px solid rgba(99,102,241,.3);border-radius:16px;padding:28px;width:640px;max-width:96vw;max-height:90vh;overflow-y:auto}
-.modal-title{font-size:16px;font-weight:800;color:#e2e8f0;margin-bottom:20px}
-.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.06)}
-.type-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
-.type-card{padding:12px;border-radius:10px;border:1.5px solid rgba(255,255,255,.07);cursor:pointer;text-align:center;transition:.1s}
-.type-card.sel{border-color:rgba(99,102,241,.5);background:rgba(99,102,241,.08)}
-.type-card-icon{font-size:20px;margin-bottom:4px}.type-card-name{font-size:12px;font-weight:700;color:#e2e8f0}
-.type-card-sub{font-size:10px;color:#64748b;margin-top:2px}
-.action-btns,.act-btns{display:flex;gap:8px;margin-bottom:16px}
-.abtn{flex:1;padding:10px;border-radius:8px;border:1.5px solid rgba(255,255,255,.08);cursor:pointer;text-align:center;font-size:12px;font-weight:700;transition:.1s;background:transparent;color:#94a3b8}
-.abtn.sel-block{border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.08);color:#f87171}
-.abtn.sel-warn{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.08);color:#fbbf24}
-.abtn.sel-allow{border-color:rgba(16,185,129,.5);background:rgba(16,185,129,.08);color:#10b981}
-.abtn.sel-act{border-color:rgba(99,102,241,.5);background:rgba(99,102,241,.08);color:#a5b4fc}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.chip-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;padding:8px;background:#060d1a;border:1px solid rgba(255,255,255,.06);border-radius:8px;min-height:36px}
-.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:14px;font-size:11px;font-weight:600;background:rgba(99,102,241,.12);color:#a5b4fc;border:1px solid rgba(99,102,241,.25)}
-.chip button{background:none;border:none;color:currentColor;cursor:pointer;font-size:10px;padding:0;opacity:.7}
-.toggle{width:38px;height:22px;border-radius:11px;position:relative;cursor:pointer;border:none;flex-shrink:0;transition:.2s;background:#1e293b}
-.toggle.on{background:#6366f1}
-.toggle::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s}
-.toggle.on::after{left:19px}
-.hid{display:none!important}
-/* Category search box */
-.cat-search{position:relative;margin-bottom:8px}
-.cat-search input{margin:0;padding:8px 12px;font-size:12px}
-.cat-list{max-height:180px;overflow-y:auto;background:#060d1a;border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:6px}
-.cat-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:12px;color:#94a3b8;transition:.1s}
-.cat-item:hover{background:rgba(99,102,241,.1);color:#e2e8f0}
-.cat-item.selected{background:rgba(99,102,241,.15);color:#a5b4fc}
-.cat-item input[type=checkbox]{width:14px;height:14px;accent-color:#6366f1;cursor:pointer;margin:0;flex-shrink:0}
-/* Warning banner for service role key */
-.sec-warn{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#f87171;display:flex;gap:12px;align-items:flex-start}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telnix Admin Panel</title>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-<!-- Login Screen -->
+<!-- ── Login Screen ──────────────────────────────────────────────────────── -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="logo-row"><div class="logo-icon">🛡</div><div><div class="logo-name">TELNIX</div><div class="logo-sub">ADMIN PANEL</div></div></div>
-    <h2>Admin Sign In</h2><p class="sub">Sign in to manage policies and view activity</p>
-    <label>Email</label><input type="email" id="l-email" placeholder="admin@company.com">
-    <label>Password</label><input type="password" id="l-pass" placeholder="Password">
+    <div class="logo-row">
+      <div class="logo-icon">🛡</div>
+      <div>
+        <div class="logo-name">TELNIX</div>
+        <div class="logo-sub">ADMIN PANEL</div>
+      </div>
+    </div>
+    <h2>Admin Sign In</h2>
+    <p class="sub">Sign in to manage policies and view activity</p>
+    <label for="l-email">Email</label>
+    <input type="email" id="l-email" placeholder="admin@company.com" autocomplete="email">
+    <label for="l-pass">Password</label>
+    <input type="password" id="l-pass" placeholder="Password" autocomplete="current-password">
     <button class="btn btn-primary btn-full" id="l-btn">Sign In</button>
     <div class="err" id="l-err"></div>
   </div>
 </div>
 
-<!-- App -->
+<!-- ── App Shell ─────────────────────────────────────────────────────────── -->
 <div id="app">
+
+  <!-- Sidebar -->
   <div class="sidebar">
-    <div class="sb-logo"><div class="logo-icon">🛡</div><div class="logo-name">TELNIX</div></div>
+    <div class="sb-logo">
+      <div class="logo-icon">🛡</div>
+      <div class="logo-name">TELNIX</div>
+    </div>
+
     <div class="sb-section">Overview</div>
     <div class="nav active" data-page="dashboard">📊 Dashboard</div>
     <div class="nav" data-page="logs">📋 Activity Logs</div>
+
     <div class="sb-section">Policy</div>
     <div class="nav" data-page="policies">🛡 Policies</div>
     <div class="nav" data-page="urllists">📋 URL Lists</div>
     <div class="nav" data-page="filetypes">📝 File Type Lists</div>
     <div class="nav" data-page="categories">📁 Custom Categories</div>
+
     <div class="sb-section">Access</div>
     <div class="nav" data-page="users">👥 Users</div>
     <div class="nav" data-page="bypass">🔑 Bypass Codes</div>
+
     <div class="sb-section">Tools</div>
     <div class="nav" data-page="urltester">🔍 URL Tester</div>
+
     <div class="sb-footer">
       <div class="sb-user" id="adm-email-lbl"></div>
       <button class="btn btn-sm btn-danger" id="logout-btn">Sign Out</button>
     </div>
   </div>
+
+  <!-- Main content -->
   <div class="main">
-    <!-- Dashboard -->
+
+    <!-- ── Dashboard ──────────────────────────────────────────────────────── -->
     <div class="page active" id="page-dashboard">
-      <div class="page-header"><div><div class="page-title">Dashboard</div><div class="page-sub">Last 24 hours activity across all users</div></div><button class="btn btn-ghost btn-sm" onclick="loadDash()">🔄 Refresh</button></div>
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-sub">Last 24 hours across all users</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="btn-dash-refresh">🔄 Refresh</button>
+      </div>
       <div class="stats">
         <div class="stat"><div class="stat-num" id="s-t" style="color:#818cf8">—</div><div class="stat-lbl">Total Events</div></div>
         <div class="stat"><div class="stat-num" id="s-b" style="color:#f87171">—</div><div class="stat-lbl">Blocked</div></div>
         <div class="stat"><div class="stat-num" id="s-w" style="color:#fbbf24">—</div><div class="stat-lbl">Warned</div></div>
         <div class="stat"><div class="stat-num" id="s-u" style="color:#10b981">—</div><div class="stat-lbl">Active Users</div></div>
       </div>
-      <div class="card"><div class="card-title">Recent Activity</div>
-        <div class="tbl-wrap"><table><thead><tr><th>Time</th><th>User</th><th>Domain</th><th>Activity</th><th>Action</th><th>Policy</th></tr></thead>
-        <tbody id="dash-tb"><tr><td colspan="6" class="loading">Loading...</td></tr></tbody></table></div>
+      <div class="card">
+        <div class="card-title">Recent Activity</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Time</th><th>User</th><th>Domain</th><th>Activity</th><th>Action</th><th>Policy</th></tr></thead>
+            <tbody id="dash-tb"><tr><td colspan="6" class="loading">Loading...</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- Logs -->
+    <!-- ── Activity Logs ───────────────────────────────────────────────────── -->
     <div class="page" id="page-logs">
-      <div class="page-header"><div><div class="page-title">Activity Logs</div><div class="page-sub">All user browsing and download activity</div></div><button class="btn btn-success btn-sm" onclick="exportLogs()">⬇ Export CSV</button></div>
-      <div class="filters">
-        <input type="text" id="f-s" placeholder="Search domain / user..." oninput="loadLogs()">
-        <select id="f-a" onchange="loadLogs()"><option value="">All Actions</option><option value="block">Block</option><option value="warn">Warn</option><option value="allow">Allow</option></select>
-        <select id="f-ac" onchange="loadLogs()"><option value="">All Activities</option><option value="browse">Browse</option><option value="download">Download</option></select>
-        <input type="text" id="f-u" placeholder="Filter by email..." oninput="loadLogs()" style="max-width:200px">
-        <button class="btn btn-primary btn-sm" onclick="loadLogs()">🔄</button>
+      <div class="page-header">
+        <div>
+          <div class="page-title">Activity Logs</div>
+          <div class="page-sub">All user browsing and download activity</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" id="btn-logs-refresh">🔄 Refresh</button>
+          <button class="btn btn-success btn-sm" id="btn-export-csv">⬇ Export CSV</button>
+        </div>
       </div>
-      <div class="tbl-wrap"><table><thead><tr><th>Time</th><th>User</th><th>Domain</th><th>Activity</th><th>Action</th><th>Category</th><th>Policy</th><th>File</th></tr></thead>
-      <tbody id="logs-tb"><tr><td colspan="8" class="loading">Loading...</td></tr></tbody></table></div>
+      <div class="filters">
+        <input type="text"  id="f-s"  placeholder="Search domain / user..." style="flex:1;max-width:none;margin:0">
+        <select id="f-a"  style="width:auto;margin:0">
+          <option value="">All Actions</option>
+          <option value="block">Block</option>
+          <option value="warn">Warn</option>
+          <option value="allow">Allow</option>
+        </select>
+        <select id="f-ac" style="width:auto;margin:0">
+          <option value="">All Activities</option>
+          <option value="browse">Browse</option>
+          <option value="download">Download</option>
+        </select>
+        <input type="text" id="f-u" placeholder="Filter by email..." style="max-width:200px;margin:0">
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Time</th><th>User</th><th>Domain</th><th>Activity</th><th>Action</th><th>Category</th><th>Policy</th><th>File</th></tr></thead>
+          <tbody id="logs-tb"><tr><td colspan="8" class="loading">Loading...</td></tr></tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- Policies -->
+    <!-- ── Policies ────────────────────────────────────────────────────────── -->
     <div class="page" id="page-policies">
       <div class="page-header">
-        <div><div class="page-title">Policies</div><div class="page-sub">First match wins — top to bottom through groups</div></div>
+        <div>
+          <div class="page-title">Policies</div>
+          <div class="page-sub">First match wins — top to bottom through groups</div>
+        </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost btn-sm" onclick="openGrpModal()">📁 New Group</button>
-          <button class="btn btn-primary btn-sm" onclick="openPolModal()">+ New Policy</button>
-          <button class="btn btn-success btn-sm" id="push-btn" onclick="pushAll()">☁ Push to Users</button>
+          <button class="btn btn-ghost btn-sm"   id="btn-new-group">📁 New Group</button>
+          <button class="btn btn-primary btn-sm" id="btn-new-policy">+ New Policy</button>
+          <button class="btn btn-success btn-sm" id="push-btn">☁ Push to Users</button>
         </div>
       </div>
       <div class="alert" id="pol-al"></div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
         <span style="font-size:12px;color:#64748b">Default Action:</span>
-        <select id="def-action" onchange="D.policySettings.defaultAction=this.value" style="width:auto;margin:0;padding:6px 12px"><option value="allow">Allow</option><option value="warn">Warn</option><option value="block">Block</option></select>
+        <select id="def-action" style="width:auto;margin:0;padding:6px 12px">
+          <option value="allow">Allow</option>
+          <option value="warn">Warn</option>
+          <option value="block">Block</option>
+        </select>
       </div>
       <div id="pol-con"><div class="loading">Loading...</div></div>
     </div>
 
-    <!-- URL Lists -->
+    <!-- ── URL Lists ───────────────────────────────────────────────────────── -->
     <div class="page" id="page-urllists">
-      <div class="page-header"><div><div class="page-title">URL Lists</div><div class="page-sub">Named domain lists referenced in policies</div></div><button class="btn btn-primary btn-sm" onclick="openListModal('url')">+ New URL List</button></div>
-      <div class="alert" id="ul-al"></div>
-      <input type="text" id="ul-search" placeholder="🔍  Search URL lists..." oninput="renderUL()" style="margin-bottom:14px">
+      <div class="page-header">
+        <div>
+          <div class="page-title">URL Lists</div>
+          <div class="page-sub">Named domain lists referenced in policies</div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="btn-new-urllist">+ New URL List</button>
+      </div>
+      <input type="text" id="ul-search" placeholder="🔍  Search URL lists by name..." style="margin-bottom:14px">
       <div id="ul-con"><div class="loading">Loading...</div></div>
     </div>
 
-    <!-- File Types -->
+    <!-- ── File Type Lists ─────────────────────────────────────────────────── -->
     <div class="page" id="page-filetypes">
-      <div class="page-header"><div><div class="page-title">File Type Lists</div><div class="page-sub">Extension lists for download policies</div></div><button class="btn btn-primary btn-sm" onclick="openListModal('ft')">+ New File Type List</button></div>
-      <div class="alert" id="ft-al"></div><div id="ft-con"><div class="loading">Loading...</div></div>
+      <div class="page-header">
+        <div>
+          <div class="page-title">File Type Lists</div>
+          <div class="page-sub">Extension groups for download policies</div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="btn-new-filetype">+ New File Type List</button>
+      </div>
+      <div id="ft-con"><div class="loading">Loading...</div></div>
     </div>
 
-    <!-- Categories -->
+    <!-- ── Custom Categories ───────────────────────────────────────────────── -->
     <div class="page" id="page-categories">
-      <div class="page-header"><div><div class="page-title">Custom Categories</div><div class="page-sub">Group domains into named categories for policies</div></div><button class="btn btn-primary btn-sm" onclick="openCatModal()">+ New Category</button></div>
-      <div class="alert" id="cat-al"></div>
-      <input type="text" id="cat-search" placeholder="🔍  Search categories..." oninput="renderCats()" style="margin-bottom:14px">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Custom Categories</div>
+          <div class="page-sub">Group domains into named categories for use in policies</div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="btn-new-cat">+ New Category</button>
+      </div>
+      <input type="text" id="cat-search" placeholder="🔍  Search categories by name..." style="margin-bottom:14px">
       <div id="cat-con"><div class="loading">Loading...</div></div>
     </div>
 
-    <!-- Users -->
+    <!-- ── Users ───────────────────────────────────────────────────────────── -->
     <div class="page" id="page-users">
-      <div class="page-header"><div><div class="page-title">Users</div><div class="page-sub">Manage who can log into the extension</div></div></div>
-      <div class="card"><div class="card-title">Create New User</div>
-        <div class="alert" id="u-al"></div>
-        <div class="grid2"><div><label>Email *</label><input type="email" id="u-email" placeholder="user@company.com"></div><div><label>Password *</label><input type="password" id="u-pass" placeholder="Set a password"></div></div>
-        <button class="btn btn-primary" onclick="createUser()">+ Create User</button>
+      <div class="page-header">
+        <div>
+          <div class="page-title">Users</div>
+          <div class="page-sub">Manage who can log into the extension</div>
+        </div>
       </div>
-      <div class="card"><div class="card-title">All Users</div>
-        <div class="tbl-wrap"><table><thead><tr><th>Email</th><th>Last Sign In</th><th>Total Logs</th><th></th></tr></thead>
-        <tbody id="users-tb"><tr><td colspan="4" class="loading">Loading...</td></tr></tbody></table></div>
+      <div class="card">
+        <div class="card-title">Create New User</div>
+        <div class="alert" id="u-al"></div>
+        <div class="grid2">
+          <div><label>Email *</label><input type="email" id="u-email" placeholder="user@company.com"></div>
+          <div><label>Password *</label><input type="password" id="u-pass" placeholder="Set a password"></div>
+        </div>
+        <button class="btn btn-primary" id="btn-create-user">+ Create User</button>
+        <p style="font-size:11px;color:#475569;margin-top:10px">
+          ⚠ User creation via the admin panel is disabled for security. Use the
+          <a href="https://supabase.com/dashboard" target="_blank" style="color:#818cf8">Supabase Dashboard</a>
+          → Authentication → Users → Invite user.
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-title">All Users</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Email</th><th>Last Sign In</th><th>Total Logs</th><th></th></tr></thead>
+            <tbody id="users-tb"><tr><td colspan="4" class="loading">Loading...</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- Bypass -->
+    <!-- ── Bypass Codes ────────────────────────────────────────────────────── -->
     <div class="page" id="page-bypass">
-      <div class="page-header"><div><div class="page-title">Bypass Codes</div><div class="page-sub">Time-limited codes to pass through a block</div></div></div>
-      <div class="card"><div class="card-title">Create Bypass Code</div>
+      <div class="page-header">
+        <div>
+          <div class="page-title">Bypass Codes</div>
+          <div class="page-sub">Time-limited codes that let users pass through a block</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Create Bypass Code</div>
         <div class="alert" id="bp-al"></div>
         <div class="grid2">
-          <div><label>Code (blank = auto)</label><input type="text" id="bp-code" placeholder="BYPASS-ABC123" style="text-transform:uppercase"></div>
+          <div><label>Code (blank = auto-generate)</label><input type="text" id="bp-code" placeholder="BYPASS-ABC123" style="text-transform:uppercase"></div>
           <div><label>Duration (minutes)</label><input type="number" id="bp-dur" value="30" min="1"></div>
-          <div><label>Domain (blank = all)</label><input type="text" id="bp-dom" placeholder="github.com"></div>
-          <div><label>Label</label><input type="text" id="bp-lbl" placeholder="Reason / requester"></div>
+          <div><label>Domain (blank = all sites)</label><input type="text" id="bp-dom" placeholder="github.com"></div>
+          <div><label>Label / Reason</label><input type="text" id="bp-lbl" placeholder="Who requested this"></div>
         </div>
-        <button class="btn btn-primary" onclick="createBypass()">+ Create Code</button>
+        <button class="btn btn-primary" id="btn-create-bypass">+ Create Code</button>
       </div>
-      <div class="card"><div class="card-title">Active Codes</div>
-        <div class="tbl-wrap"><table><thead><tr><th>Code</th><th>Domain</th><th>Duration</th><th>Label</th><th>Expires</th><th></th></tr></thead>
-        <tbody id="bp-tb"><tr><td colspan="6" class="loading">No codes</td></tr></tbody></table></div>
+      <div class="card">
+        <div class="card-title">Active Codes</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Code</th><th>Domain</th><th>Duration</th><th>Label</th><th>Expires</th><th></th></tr></thead>
+            <tbody id="bp-tb"><tr><td colspan="6" class="loading">No codes</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- URL Tester -->
+    <!-- ── URL Tester ──────────────────────────────────────────────────────── -->
     <div class="page" id="page-urltester">
-      <div class="page-header"><div><div class="page-title">URL Tester</div><div class="page-sub">Test any URL against current local policies</div></div></div>
+      <div class="page-header">
+        <div>
+          <div class="page-title">URL Tester</div>
+          <div class="page-sub">Test any URL against the currently loaded policies</div>
+        </div>
+      </div>
       <div class="card">
-        <div style="display:flex;gap:10px"><input type="text" id="tu-url" placeholder="https://example.com" style="margin:0;flex:1" onkeydown="if(event.key==='Enter')testUrl()"><button class="btn btn-primary" onclick="testUrl()">Test</button></div>
+        <div style="display:flex;gap:10px">
+          <input type="text" id="tu-url" placeholder="https://example.com" style="margin:0;flex:1">
+          <button class="btn btn-primary" id="btn-test-url">Test URL</button>
+        </div>
         <div id="tu-res" style="margin-top:16px"></div>
       </div>
     </div>
-  </div>
-</div>
+
+  </div><!-- /.main -->
+</div><!-- /#app -->
+
+<!-- ── Modals ─────────────────────────────────────────────────────────────── -->
 
 <!-- Policy Modal -->
 <div class="modal-bg" id="pol-modal">
   <div class="modal">
     <div class="modal-title">🛡 <span id="pm-title">New Policy</span></div>
     <div class="alert" id="pm-al"></div>
-    <div class="grid2"><div><label>Policy Name *</label><input type="text" id="pm-name" placeholder="Block Social Media"></div><div><label>Group *</label><select id="pm-grp"></select></div></div>
+
+    <div class="grid2">
+      <div><label>Policy Name *</label><input type="text" id="pm-name" placeholder="Block Social Media"></div>
+      <div><label>Group *</label><select id="pm-grp"></select></div>
+    </div>
+
     <label>Policy Type</label>
     <div class="type-cards">
       <div class="type-card sel" data-t="domain"><div class="type-card-icon">🌐</div><div class="type-card-name">Domain</div><div class="type-card-sub">Specific domains</div></div>
@@ -270,649 +294,119 @@ tr:last-child td{border-bottom:none}tr:hover td{background:rgba(255,255,255,.02)
       <div class="type-card" data-t="reputation"><div class="type-card-icon">🧠</div><div class="type-card-name">Known Malicious</div><div class="type-card-sub">Reputation DB</div></div>
     </div>
 
-    <!-- Domain criteria -->
-    <div id="crit-domain"><label>Domains (one per line)</label><textarea id="pm-doms" placeholder="facebook.com&#10;twitter.com"></textarea></div>
+    <div id="crit-domain">
+      <label>Domains (one per line, subdomains matched automatically)</label>
+      <textarea id="pm-doms" placeholder="facebook.com&#10;twitter.com&#10;instagram.com"></textarea>
+    </div>
 
-    <!-- Category criteria — searchable scrollable chip selector -->
     <div id="crit-category" class="hid">
       <label>Selected Categories</label>
       <div class="chip-wrap" id="pm-cat-chips"></div>
-      <div class="cat-search"><input type="text" id="pm-cat-search" placeholder="Search categories..." oninput="filterCatList()" style="margin:0"></div>
+      <input type="text" id="pm-cat-search" placeholder="Search categories..." style="margin-bottom:6px">
       <div class="cat-list" id="pm-cat-list"></div>
     </div>
 
-    <!-- URL List criteria -->
-    <div id="crit-list" class="hid"><label>URL Lists</label><div id="pm-list-cbs" style="display:flex;flex-direction:column;gap:6px;padding:10px;background:#060d1a;border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:14px;max-height:150px;overflow-y:auto"></div></div>
+    <div id="crit-list" class="hid">
+      <label>URL Lists (select one or more)</label>
+      <div id="pm-list-cbs" style="display:flex;flex-direction:column;gap:6px;padding:10px;background:#060d1a;border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:14px;max-height:160px;overflow-y:auto"></div>
+    </div>
 
-    <!-- Threat score criteria -->
-    <div id="crit-threat" class="hid"><div class="grid2"><div><label>Operator</label><select id="pm-sop"><option value="gte">≥ at least</option><option value="gt">> more than</option></select></div><div><label>Threshold (0–100)</label><input type="number" id="pm-sthr" value="55" min="0" max="100"></div></div></div>
+    <div id="crit-threat" class="hid">
+      <div class="grid2">
+        <div><label>Operator</label><select id="pm-sop"><option value="gte">≥ at least</option><option value="gt">&gt; more than</option></select></div>
+        <div><label>Threshold (0–100)</label><input type="number" id="pm-sthr" value="55" min="0" max="100"></div>
+      </div>
+    </div>
 
-    <!-- Reputation criteria -->
-    <div id="crit-reputation" class="hid"><div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:12px;font-size:12px;color:#fbbf24;margin-bottom:14px">Blocks URLs confirmed malicious by URLhaus or Google Safe Browsing reputation database.</div></div>
+    <div id="crit-reputation" class="hid">
+      <div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:12px;font-size:12px;color:#fbbf24;margin-bottom:14px">
+        Blocks URLs confirmed malicious by URLhaus or Google Safe Browsing reputation database.
+      </div>
+    </div>
 
     <label>Action</label>
     <div class="action-btns">
-      <button class="abtn sel-block" data-a="block" onclick="setAct('block')">🔴 Block</button>
-      <button class="abtn" data-a="warn" onclick="setAct('warn')">🟡 Warn</button>
-      <button class="abtn" data-a="allow" onclick="setAct('allow')">🟢 Allow</button>
+      <button class="abtn sel-block" data-a="block">🔴 Block</button>
+      <button class="abtn" data-a="warn">🟡 Warn</button>
+      <button class="abtn" data-a="allow">🟢 Allow</button>
     </div>
+
     <label>Activity</label>
     <div class="act-btns">
-      <button class="abtn sel-act" data-v="browse" onclick="setActiv('browse')">🌐 Browse</button>
-      <button class="abtn" data-v="download" onclick="setActiv('download')">📥 Download</button>
-      <button class="abtn" data-v="all" onclick="setActiv('all')">🔒 Both</button>
+      <button class="abtn sel-act" data-v="browse">🌐 Browse</button>
+      <button class="abtn" data-v="download">📥 Download</button>
+      <button class="abtn" data-v="all">🔒 Both</button>
     </div>
-    <div id="pm-ftrow" class="hid"><label>File Type List (blank = all types)</label><select id="pm-ftl"></select></div>
-    <label>Note (optional)</label><input type="text" id="pm-note" placeholder="Admin note shown to user">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span style="font-size:12px;color:#94a3b8">Enabled</span><button class="toggle on" id="pm-en" onclick="this.classList.toggle('on')"></button></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="close_('pol-modal')">Cancel</button><button class="btn btn-primary" onclick="savePol()">Save Policy</button></div>
+
+    <div id="pm-ftrow" class="hid">
+      <label>File Type List (blank = all types)</label>
+      <select id="pm-ftl"></select>
+    </div>
+
+    <label>Note (shown to user on block/warn page)</label>
+    <input type="text" id="pm-note" placeholder="Optional explanation for the user">
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="font-size:12px;color:#94a3b8">Enabled</span>
+      <button class="toggle on" id="pm-en" onclick="this.classList.toggle('on')"></button>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-cancel-pol">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-pol">Save Policy</button>
+    </div>
   </div>
 </div>
 
-<!-- Group Modal -->
+<!-- New Group Modal -->
 <div class="modal-bg" id="grp-modal">
-  <div class="modal" style="max-width:420px">
+  <div class="modal modal-sm">
     <div class="modal-title">📁 New Group</div>
-    <label>Group Name *</label><input type="text" id="gm-name" placeholder="e.g. Threat Protection">
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="close_('grp-modal')">Cancel</button><button class="btn btn-primary" onclick="saveGrp()">Create</button></div>
+    <label>Group Name *</label>
+    <input type="text" id="gm-name" placeholder="e.g. Threat Protection">
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-cancel-grp">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-grp">Create Group</button>
+    </div>
   </div>
 </div>
 
-<!-- List Modal -->
+<!-- URL List / File Type List Modal (shared) -->
 <div class="modal-bg" id="list-modal">
   <div class="modal">
     <div class="modal-title" id="lm-title">📋 New List</div>
     <div class="alert" id="lm-al"></div>
-    <div class="grid2"><div><label>Name *</label><input type="text" id="lm-name" placeholder="My List"></div><div><label>Description</label><input type="text" id="lm-desc"></div></div>
+    <div class="grid2">
+      <div><label>Name *</label><input type="text" id="lm-name" placeholder="My List"></div>
+      <div><label>Description</label><input type="text" id="lm-desc" placeholder="Optional description"></div>
+    </div>
     <label id="lm-lbl">Domains (one per line)</label>
     <textarea id="lm-con" rows="8" placeholder="facebook.com&#10;twitter.com"></textarea>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="close_('list-modal')">Cancel</button><button class="btn btn-primary" onclick="saveList()">Save</button></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-cancel-list">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-list">Save</button>
+    </div>
   </div>
 </div>
 
-<!-- Category Modal -->
+<!-- Custom Category Modal -->
 <div class="modal-bg" id="cat-modal">
   <div class="modal">
     <div class="modal-title" id="cm-title">📁 New Category</div>
     <div class="alert" id="cm-al"></div>
-    <label>Name *</label><input type="text" id="cm-name" placeholder="Cloud Storage">
+    <label>Name *</label>
+    <input type="text" id="cm-name" placeholder="e.g. Cloud Storage">
     <label>Domains (one per line)</label>
-    <textarea id="cm-doms" rows="6" placeholder="dropbox.com&#10;drive.google.com"></textarea>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="close_('cat-modal')">Cancel</button><button class="btn btn-primary" onclick="saveCat()">Save</button></div>
+    <textarea id="cm-doms" rows="6" placeholder="dropbox.com&#10;drive.google.com&#10;box.com"></textarea>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-cancel-cat">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-cat">Save Category</button>
+    </div>
   </div>
 </div>
 
-<script>
-// ─────────────────────────────────────────────────────────────────────────────
-// CONFIG — only anon key here; service role calls go through Edge Function
-// ─────────────────────────────────────────────────────────────────────────────
-const SB   = 'https://nsauxvxopajdsgglcvpk.supabase.co';
-const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zYXV4dnhvcGFqZHNnZ2xjdnBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDYyNDIsImV4cCI6MjA4OTQyMjI0Mn0.YMblltS5nm9TIRRi_ysciAJoO4zljnlTTfJRBONnBxw';
-// SECURITY NOTE: Service role key removed from frontend.
-// User management calls now use the authenticated user's own JWT.
-// Create users via Supabase dashboard or a backend Edge Function.
-const ORG  = '4c0a98ac-c971-4d04-9e51-655f323b512e';
+<!-- ── Entry point ─────────────────────────────────────────────────────────── -->
+<script type="module" src="js/app.js"></script>
 
-const ALL_CATS = ['social','news','productivity','shopping','entertainment','education','technology',
-  'finance','health','travel','gaming','sports','adult','gambling','malware','phishing',
-  'streaming','messaging','search','government','unknown'];
-
-let TOK = null;
-let D   = {orderedPolicies:[],policyGroups:[],urlLists:[],customCategories:[],
-           policySettings:{defaultAction:'allow'},fileTypeLists:[],bypassTokens:[]};
-let ePolId=null, eListType=null, eListId=null, eCatId=null;
-let curAct='block', curActiv='browse', curType='domain';
-let allLogs=[];
-
-const $   = id => document.getElementById(id);
-const esc = s  => { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; };
-const fmt = ts => new Date(ts).toLocaleTimeString();
-const fmtF= ts => new Date(ts).toLocaleString();
-
-function showAl(id,t,m){const e=$(id);if(!e)return;e.className='alert alert-'+(t==='success'?'s':'e');e.textContent=m;e.style.display='block';if(t==='success')setTimeout(()=>e.style.display='none',3500);}
-function open_(id){$(id).classList.add('open');}
-function close_(id){$(id).classList.remove('open');}
-
-// Authenticated fetch — always uses the logged-in user's JWT
-async function sbf(path, opts={}) {
-  const h = {"apikey":ANON,"Content-Type":"application/json",
-    "Authorization": TOK ? `Bearer ${TOK}` : `Bearer ${ANON}`,
-    ...(opts.headers||{})};
-  return fetch(SB+path, {...opts, headers:h});
-}
-
-// ── Login ─────────────────────────────────────────────────────────────────────
-$('l-btn').onclick = async () => {
-  const e=$('l-email').value.trim(), p=$('l-pass').value, err=$('l-err');
-  err.style.display='none'; $('l-btn').disabled=true; $('l-btn').textContent='Signing in...';
-  try {
-    const r = await fetch(`${SB}/auth/v1/token?grant_type=password`,{
-      method:'POST', headers:{"apikey":ANON,"Content-Type":"application/json"},
-      body: JSON.stringify({email:e,password:p})
-    });
-    const d = await r.json();
-    if (!r.ok) { err.textContent=d.error_description||'Invalid credentials'; err.style.display='block'; $('l-btn').disabled=false; $('l-btn').textContent='Sign In'; return; }
-    TOK = d.access_token;
-    $('adm-email-lbl').textContent = d.user.email;
-    $('login-screen').style.display = 'none';
-    $('app').style.display = 'flex';
-    await loadData(); showPage('dashboard'); loadDash();
-  } catch {
-    err.textContent='Connection error'; err.style.display='block';
-    $('l-btn').disabled=false; $('l-btn').textContent='Sign In';
-  }
-};
-$('l-email').onkeydown = e => { if(e.key==='Enter') $('l-pass').focus(); };
-$('l-pass').onkeydown  = e => { if(e.key==='Enter') $('l-btn').click(); };
-
-$('logout-btn').onclick = async () => {
-  await fetch(`${SB}/auth/v1/logout`,{method:'POST',headers:{"apikey":ANON,"Authorization":`Bearer ${TOK}`}}).catch(()=>{});
-  TOK=null; $('app').style.display='none'; $('login-screen').style.display='flex';
-};
-
-// ── Navigation ────────────────────────────────────────────────────────────────
-function showPage(id) {
-  document.querySelectorAll('.nav').forEach(n => n.classList.toggle('active', n.dataset.page===id));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  $('page-'+id).classList.add('active');
-  ({logs:loadLogs, users:loadUsers, bypass:loadBypass, urllists:renderUL, filetypes:renderFT, categories:renderCats, policies:renderPols})[id]?.();
-}
-document.querySelectorAll('.nav').forEach(n => n.onclick = () => showPage(n.dataset.page));
-
-// ── Load / Save data ──────────────────────────────────────────────────────────
-async function loadData() {
-  try {
-    const r = await sbf(`/rest/v1/policies?org_id=eq.${ORG}&order=updated_at.desc&limit=1`);
-    if (r.ok) {
-      const rows = await r.json();
-      if (rows.length && rows[0].payload) {
-        const p = rows[0].payload;
-        D.orderedPolicies  = p.orderedPolicies  || [];
-        D.policyGroups     = p.policyGroups     || [];
-        D.urlLists         = p.urlLists          || [];
-        D.customCategories = p.customCategories  || [];
-        D.policySettings   = p.policySettings    || {defaultAction:'allow'};
-        D.fileTypeLists    = p.fileTypeLists     || [];
-        D.bypassTokens     = p.bypassTokens      || [];
-        $('def-action').value = D.policySettings.defaultAction||'allow';
-      }
-    }
-  } catch(e) { console.warn('loadData error:', e); }
-  if (!D.policyGroups.find(g=>g.name==='Default'))
-    D.policyGroups.push({id:'grp_def_'+Date.now(),name:'Default',_isDefault:true,policyIds:[]});
-}
-
-// FIX: Use upsert (POST with merge-duplicates) instead of check+PATCH/POST
-// Uses the authenticated user's JWT — RLS policy allows this
-async function saveData() {
-  // Step 1: check if row exists
-  const check = await sbf(`/rest/v1/policies?org_id=eq.${ORG}&select=id`);
-  const rows  = check.ok ? await check.json() : [];
-
-  let r;
-  if (rows.length > 0) {
-    // Row exists — PATCH it
-    r = await sbf(`/rest/v1/policies?org_id=eq.${ORG}`, {
-      method: 'PATCH',
-      headers: {"Prefer": "return=minimal"},
-      body: JSON.stringify({
-        payload:    D,
-        version:    Date.now(),
-        updated_at: new Date().toISOString()
-      })
-    });
-  } else {
-    // No row yet — INSERT
-    r = await sbf(`/rest/v1/policies`, {
-      method: 'POST',
-      headers: {"Prefer": "return=minimal"},
-      body: JSON.stringify({
-        org_id:     ORG,
-        payload:    D,
-        version:    Date.now(),
-        updated_at: new Date().toISOString()
-      })
-    });
-  }
-
-  if (!r.ok) {
-    const t = await r.text().catch(() => '');
-    console.error('Push failed:', r.status, t);
-  }
-  return r.ok;
-}
-
-async function pushAll() {
-  const btn=$('push-btn'); btn.disabled=true; btn.textContent='Pushing...';
-  try {
-    const ok = await saveData();
-    showAl('pol-al', ok?'success':'error',
-      ok ? '✓ Policies pushed — all users will sync within 1 minute'
-         : 'Push failed. Check your Supabase RLS policies (see SQL setup guide).');
-  } catch(e) {
-    showAl('pol-al','error','Error: '+e.message);
-  }
-  btn.disabled=false; btn.textContent='☁ Push to Users';
-}
-
-// ── Dashboard ─────────────────────────────────────────────────────────────────
-async function loadDash() {
-  const since = Date.now()-86400000;
-  // Use authenticated token — RLS allows reading own org's logs
-  const r = await sbf(`/rest/v1/activity_logs?org_id=eq.${ORG}&ts=gte.${since}&order=ts.desc&limit=300`);
-  if (!r.ok) return;
-  const logs = await r.json();
-  $('s-t').textContent = logs.length;
-  $('s-b').textContent = logs.filter(l=>l.action==='block').length;
-  $('s-w').textContent = logs.filter(l=>l.action==='warn').length;
-  $('s-u').textContent = new Set(logs.map(l=>l.user_email).filter(Boolean)).size;
-  $('dash-tb').innerHTML = logs.slice(0,20).map(l=>
-    `<tr><td style="color:#64748b;font-size:11px;white-space:nowrap">${fmt(l.ts)}</td>
-    <td style="color:#a5b4fc">${esc(l.user_email||'—')}</td>
-    <td style="font-weight:600">${esc(l.domain||'—')}</td>
-    <td><span class="badge badge-${l.activity||'browse'}">${l.activity||'browse'}</span></td>
-    <td><span class="badge badge-${l.action}">${l.action}</span></td>
-    <td style="color:#64748b;font-size:11px">${esc(l.policy_name||l.reason||'—')}</td></tr>`
-  ).join('') || '<tr><td colspan="6" class="loading">No activity yet today</td></tr>';
-}
-
-// ── Logs ──────────────────────────────────────────────────────────────────────
-async function loadLogs() {
-  let url = `/rest/v1/activity_logs?org_id=eq.${ORG}&order=ts.desc&limit=500`;
-  const af=$('f-a').value, acf=$('f-ac').value;
-  if (af)  url += `&action=eq.${af}`;
-  if (acf) url += `&activity=eq.${acf}`;
-  const r = await sbf(url); if (!r.ok) return;
-  let logs = await r.json();
-  const s=$('f-s').value.trim().toLowerCase(), uf=$('f-u').value.trim().toLowerCase();
-  if (s)  logs = logs.filter(l=>(l.domain||'').includes(s)||(l.user_email||'').includes(s));
-  if (uf) logs = logs.filter(l=>(l.user_email||'').includes(uf));
-  allLogs = logs;
-  $('logs-tb').innerHTML = logs.map(l=>
-    `<tr><td style="color:#64748b;font-size:11px;white-space:nowrap">${fmt(l.ts)}</td>
-    <td style="color:#a5b4fc">${esc(l.user_email||'—')}</td>
-    <td style="font-weight:600">${esc(l.domain||'—')}</td>
-    <td><span class="badge badge-${l.activity||'browse'}">${l.activity||'browse'}</span></td>
-    <td><span class="badge badge-${l.action}">${l.action}</span></td>
-    <td style="color:#64748b;font-size:11px">${esc(l.category||'—')}</td>
-    <td style="color:#94a3b8;font-size:11px">${esc(l.policy_name||'—')}</td>
-    <td style="color:#fbbf24;font-size:11px">${esc(l.download_filename||'')}</td></tr>`
-  ).join('') || '<tr><td colspan="8" class="loading">No logs</td></tr>';
-}
-function exportLogs(){
-  if (!allLogs.length) return;
-  const h=["Time","User","Domain","Activity","Action","Category","Policy","File"];
-  const rows=allLogs.map(l=>[new Date(l.ts).toISOString(),l.user_email||'',l.domain||'',l.activity||'',l.action||'',l.category||'',l.policy_name||'',l.download_filename||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
-  const b=new Blob([[h.join(','),...rows].join('\n')],{type:'text/csv'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`telnix-${new Date().toISOString().slice(0,10)}.csv`; a.click();
-}
-
-// ── Policies ──────────────────────────────────────────────────────────────────
-function renderPols() {
-  $('def-action').value = D.policySettings.defaultAction||'allow';
-  const c=$('pol-con');
-  if (!D.policyGroups.length) { c.innerHTML='<div class="loading">No groups. Click New Group.</div>'; return; }
-  const TC={domain:'#818cf8',category:'#34d399',list:'#60a5fa',threat:'#f87171',reputation:'#fb923c'};
-  c.innerHTML = D.policyGroups.map((g,gi)=>{
-    const ps=(g.policyIds||[]).map(id=>D.orderedPolicies.find(p=>p.id===id)).filter(Boolean);
-    return `<div class="pol-group">
-      <div class="pol-group-hdr">
-        <span style="color:#64748b;font-size:12px;font-weight:700">${gi+1}.</span>
-        <span class="pol-group-name">${esc(g.name)}</span>
-        ${!g._isDefault?`<button class="btn btn-sm btn-danger" onclick="delGrp('${g.id}')">Del</button>`:''}
-      </div>
-      ${ps.map((pol,pi)=>`
-        <div class="pol-row">
-          <div>
-            <div class="pol-name">${gi+1}.${pi+1} ${esc(pol.name)}</div>
-            ${pol.note?`<div style="font-size:11px;color:#475569">${esc(pol.note)}</div>`:''}
-          </div>
-          <span style="background:${TC[pol.type]||'#818cf8'}18;color:${TC[pol.type]||'#818cf8'};padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">${pol.type||'domain'}</span>
-          <span class="badge badge-${pol.action||'block'}">${pol.action||'block'}</span>
-          <span class="badge badge-${pol.activity||'browse'}">${pol.activity||'browse'}</span>
-          <button class="toggle ${pol.enabled!==false?'on':''}" onclick="togPol('${pol.id}')"></button>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-ghost" onclick="openPolModal('${pol.id}')">✏</button>
-            <button class="btn btn-sm btn-danger" onclick="delPol('${pol.id}')">✕</button>
-          </div>
-        </div>`).join('')}
-      ${ps.length===0?`<div style="padding:12px 16px;font-size:12px;color:#475569;border-top:1px solid rgba(255,255,255,.04)">No policies — click + New Policy</div>`:''}
-    </div>`;
-  }).join('');
-}
-
-function openGrpModal(){ $('gm-name').value=''; open_('grp-modal'); setTimeout(()=>$('gm-name').focus(),100); }
-function saveGrp(){const n=$('gm-name').value.trim();if(!n)return;D.policyGroups.push({id:'grp_'+Date.now(),name:n,policyIds:[]});close_('grp-modal');renderPols();}
-function delGrp(id){if(!confirm('Delete group? Policies will be moved to Default.'))return;const dest=D.policyGroups.find(g=>g.id!==id);D.policyGroups.find(g=>g.id===id)?.policyIds?.forEach(pid=>{if(dest)dest.policyIds.push(pid);});D.policyGroups=D.policyGroups.filter(g=>g.id!==id);renderPols();}
-function togPol(id){const p=D.orderedPolicies.find(p=>p.id===id);if(p)p.enabled=p.enabled===false?true:false;renderPols();}
-function delPol(id){if(!confirm('Delete policy?'))return;D.orderedPolicies=D.orderedPolicies.filter(p=>p.id!==id);D.policyGroups.forEach(g=>{g.policyIds=(g.policyIds||[]).filter(i=>i!==id);});renderPols();}
-
-function openPolModal(id=null) {
-  ePolId=id; curAct='block'; curActiv='browse'; curType='domain';
-  $('pm-title').textContent = id?'Edit Policy':'New Policy';
-  $('pm-al').style.display='none';
-  // Populate group dropdown
-  $('pm-grp').innerHTML = D.policyGroups.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('');
-  // Populate file type list dropdown
-  $('pm-ftl').innerHTML = '<option value="">All file types</option>'+D.fileTypeLists.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join('');
-  // Reset fields
-  ['pm-name','pm-doms','pm-note'].forEach(x=>{const e=$(x);if(e)e.value='';});
-  $('pm-cat-chips').innerHTML=''; $('pm-list-cbs').innerHTML=''; $('pm-sthr').value=55;
-  $('pm-en').className='toggle on';
-  // Rebuild category list
-  buildCatList();
-  setType('domain'); setAct('block'); setActiv('browse');
-
-  if (id) {
-    const pol=D.orderedPolicies.find(p=>p.id===id); if(!pol) return;
-    $('pm-name').value=pol.name||'';
-    $('pm-note').value=pol.note||'';
-    if(pol.enabled===false) $('pm-en').className='toggle';
-    const grpOf=D.policyGroups.find(g=>g.policyIds?.includes(id));
-    if(grpOf) $('pm-grp').value=grpOf.id;
-    setType(pol.type||'domain'); setAct(pol.action||'block'); setActiv(pol.activity||'browse');
-    const c=pol.conditions||{};
-    if(c.domains) $('pm-doms').value=c.domains.join('\n');
-    if(c.categories) { c.categories.forEach(v=>addCatChip(v)); buildCatList(); }
-    if(c.listIds) { c.listIds.forEach(lid=>{ const cb=$('pm-list-cbs').querySelector(`[value="${lid}"]`); if(cb) cb.checked=true; }); }
-    if(c.scoreOp) $('pm-sop').value=c.scoreOp;
-    if(c.scoreThreshold!=null) $('pm-sthr').value=c.scoreThreshold;
-    if(pol.fileTypeListId) $('pm-ftl').value=pol.fileTypeListId;
-  }
-  open_('pol-modal');
-}
-
-function setType(t) {
-  curType=t;
-  document.querySelectorAll('.type-card').forEach(c=>c.classList.toggle('sel',c.dataset.t===t));
-  ['domain','category','list','threat','reputation'].forEach(x=>$('crit-'+x).classList.toggle('hid',x!==t));
-  if (t==='list') buildListCbs();
-}
-function setAct(a){curAct=a;document.querySelectorAll('.abtn[data-a]').forEach(b=>{b.className='abtn'+(b.dataset.a===a?` sel-${a}`:'');});}
-function setActiv(a){curActiv=a;document.querySelectorAll('.abtn[data-v]').forEach(b=>b.classList.toggle('sel-act',b.dataset.v===a));$('pm-ftrow').classList.toggle('hid',a==='browse');}
-
-// Searchable category list
-function buildCatList() {
-  const selected = new Set([...$('pm-cat-chips').querySelectorAll('[data-c]')].map(c=>c.dataset.c));
-  const all = [...ALL_CATS, ...D.customCategories.map(c=>c.name)];
-  const q   = ($('pm-cat-search')||{}).value?.toLowerCase()||'';
-  const filtered = q ? all.filter(c=>c.includes(q)) : all;
-  $('pm-cat-list').innerHTML = filtered.map(v=>`
-    <div class="cat-item${selected.has(v)?' selected':''}" onclick="toggleCat('${esc(v)}')">
-      <input type="checkbox" ${selected.has(v)?'checked':''} onclick="event.stopPropagation();toggleCat('${esc(v)}')">
-      <span>${esc(v)}</span>
-    </div>`).join('');
-}
-function filterCatList(){ buildCatList(); }
-
-function toggleCat(v) {
-  const chips=$('pm-cat-chips');
-  const existing=chips.querySelector(`[data-c="${CSS.escape(v)}"]`);
-  if (existing) { existing.remove(); }
-  else { addCatChip(v); }
-  buildCatList();
-}
-
-function addCatChip(v) {
-  if ($('pm-cat-chips').querySelector(`[data-c="${CSS.escape(v)}"]`)) return;
-  const d=document.createElement('div'); d.className='chip'; d.dataset.c=v;
-  d.innerHTML=`${esc(v)} <button onclick="toggleCat('${esc(v)}')">✕</button>`;
-  $('pm-cat-chips').appendChild(d);
-}
-
-function buildListCbs() {
-  if (!D.urlLists.length) { $('pm-list-cbs').innerHTML='<div style="color:#64748b;font-size:12px">No URL lists yet</div>'; return; }
-  $('pm-list-cbs').innerHTML=D.urlLists.map(l=>`<label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#cbd5e1;cursor:pointer"><input type="checkbox" value="${l.id}" style="accent-color:#6366f1;width:14px;height:14px;margin:0"> ${esc(l.name)} <span style="color:#475569">(${(l.domains||[]).length})</span></label>`).join('');
-}
-
-function savePol() {
-  const name=$('pm-name').value.trim();
-  if(!name){showAl('pm-al','error','Policy name is required');return;}
-  const grpId=$('pm-grp').value;
-  if(!grpId){showAl('pm-al','error','Select a group');return;}
-  const cats=[...$('pm-cat-chips').querySelectorAll('[data-c]')].map(c=>c.dataset.c);
-  const listIds=[...$('pm-list-cbs').querySelectorAll('input:checked')].map(i=>i.value);
-  const doms=$('pm-doms').value.split('\n').map(s=>s.trim().toLowerCase().replace(/^www\./,'')).filter(Boolean);
-  const conditions={};
-  if(curType==='domain')     conditions.domains=doms;
-  if(curType==='category')   conditions.categories=cats;
-  if(curType==='list')       conditions.listIds=listIds;
-  if(curType==='threat')     {conditions.scoreOp=$('pm-sop').value;conditions.scoreThreshold=parseInt($('pm-sthr').value);}
-  if(curType==='reputation') conditions.requireKnownMalicious=true;
-  const pol={name,type:curType,action:curAct,activity:curActiv,conditions,
-    note:$('pm-note').value.trim(),enabled:$('pm-en').classList.contains('on'),
-    fileTypeListId:$('pm-ftl').value||null};
-  if(ePolId){
-    const i=D.orderedPolicies.findIndex(p=>p.id===ePolId);
-    if(i>=0) D.orderedPolicies[i]={...D.orderedPolicies[i],...pol};
-  } else {
-    const id='pol_'+Date.now(); pol.id=id;
-    D.orderedPolicies.push(pol);
-    const grp=D.policyGroups.find(g=>g.id===grpId);
-    if(grp) grp.policyIds.push(id);
-  }
-  close_('pol-modal'); renderPols();
-}
-document.querySelectorAll('.type-card').forEach(c=>c.onclick=()=>setType(c.dataset.t));
-
-// ── URL Lists ─────────────────────────────────────────────────────────────────
-function renderUL() {
-  const c=$('ul-con'), q=($('ul-search')||{}).value?.toLowerCase()||'';
-  let lists=D.urlLists;
-  if(q) lists=lists.filter(l=>l.name.toLowerCase().includes(q)||(l.description||'').toLowerCase().includes(q));
-  if(!lists.length){c.innerHTML=`<div class="loading">${q?'No matching URL lists.':'No URL lists yet. Click + New URL List.'}</div>`;return;}
-  c.innerHTML=lists.map(l=>`
-    <div class="card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div style="flex:1">
-          <div style="font-size:13px;font-weight:700">${esc(l.name)}</div>
-          ${l.description?`<div style="font-size:11px;color:#64748b">${esc(l.description)}</div>`:''}
-        </div>
-        <span style="background:rgba(96,165,250,.12);color:#60a5fa;border-radius:10px;padding:2px 10px;font-size:10px;font-weight:700">${(l.domains||[]).length} domains</span>
-        <button class="btn btn-sm btn-ghost" onclick="openListModal('url','${l.id}')">✏ Edit</button>
-        <button class="btn btn-sm btn-danger" onclick="delList('url','${l.id}')">✕</button>
-      </div>
-      <div style="font-size:11px;color:#475569;font-family:monospace;line-height:1.8">${(l.domains||[]).slice(0,5).join(' · ')}${(l.domains||[]).length>5?` <span style="color:#374151">+${(l.domains||[]).length-5} more</span>`:''}</div>
-    </div>`).join('');
-}
-
-// ── File Type Lists ───────────────────────────────────────────────────────────
-function renderFT(){
-  const c=$('ft-con');
-  if(!D.fileTypeLists.length){c.innerHTML='<div class="loading">No file type lists. Click + New File Type List.</div>';return;}
-  c.innerHTML=D.fileTypeLists.map(l=>`
-    <div class="card">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div style="flex:1"><div style="font-size:13px;font-weight:700">${esc(l.name)}</div></div>
-        <span style="background:rgba(167,139,250,.12);color:#a78bfa;border-radius:10px;padding:2px 10px;font-size:10px;font-weight:700">${(l.extensions||[]).length} ext</span>
-        <button class="btn btn-sm btn-ghost" onclick="openListModal('ft','${l.id}')">✏ Edit</button>
-        <button class="btn btn-sm btn-danger" onclick="delList('ft','${l.id}')">✕</button>
-      </div>
-      <div style="font-size:11px;color:#c7d2fe;font-family:monospace">${(l.extensions||[]).slice(0,10).join(' ')}${(l.extensions||[]).length>10?` +${(l.extensions||[]).length-10} more`:''}</div>
-    </div>`).join('');
-}
-
-function openListModal(type,id=null){
-  eListType=type; eListId=id; const ft=type==='ft';
-  $('lm-title').textContent=id?(ft?'✏ Edit File Type List':'✏ Edit URL List'):(ft?'📝 New File Type List':'📋 New URL List');
-  $('lm-lbl').textContent=ft?'Extensions (one per line, e.g. .exe)':'Domains (one per line)';
-  $('lm-con').placeholder=ft?'.exe\n.msi\n.bat':'facebook.com\ntwitter.com';
-  $('lm-al').style.display='none';
-  if(id){
-    const l=(ft?D.fileTypeLists:D.urlLists).find(x=>x.id===id); if(!l)return;
-    $('lm-name').value=l.name; $('lm-desc').value=l.description||'';
-    $('lm-con').value=ft?(l.extensions||[]).join('\n'):(l.domains||[]).join('\n');
-  } else { $('lm-name').value=''; $('lm-desc').value=''; $('lm-con').value=''; }
-  open_('list-modal');
-}
-function saveList(){
-  const name=$('lm-name').value.trim(); if(!name){showAl('lm-al','error','Name required');return;}
-  const ft=eListType==='ft';
-  const items=$('lm-con').value.split('\n').map(l=>l.trim()).filter(Boolean);
-  const obj={name,description:$('lm-desc').value.trim(),...(ft?{extensions:items}:{domains:items})};
-  const lists=ft?D.fileTypeLists:D.urlLists;
-  if(eListId){const i=lists.findIndex(l=>l.id===eListId);if(i>=0)lists[i]={...lists[i],...obj};}
-  else lists.push({id:(ft?'ftl_':'ul_')+Date.now(),...obj});
-  close_('list-modal'); ft?renderFT():renderUL();
-}
-function delList(t,id){
-  if(!confirm('Delete?'))return;
-  if(t==='ft') D.fileTypeLists=D.fileTypeLists.filter(l=>l.id!==id);
-  else D.urlLists=D.urlLists.filter(l=>l.id!==id);
-  t==='ft'?renderFT():renderUL();
-}
-
-// ── Custom Categories ─────────────────────────────────────────────────────────
-function renderCats(){
-  const c=$('cat-con'), q=($('cat-search')||{}).value?.toLowerCase()||'';
-  let cats=D.customCategories;
-  if(q) cats=cats.filter(x=>x.name.toLowerCase().includes(q));
-  if(!cats.length){c.innerHTML=`<div class="loading">${q?'No matching categories.':'No custom categories yet. Click + New Category.'}</div>`;return;}
-  c.innerHTML=cats.map(cat=>`
-    <div class="card">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="flex:1">
-          <div style="font-size:13px;font-weight:700">${esc(cat.name)}</div>
-          <div style="font-size:11px;color:#64748b;margin-top:2px">${(cat.domains||[]).length} domains</div>
-        </div>
-        <button class="btn btn-sm btn-ghost" onclick="openCatModal('${cat.id}')">✏ Edit</button>
-        <button class="btn btn-sm btn-danger" onclick="delCat('${cat.id}')">✕</button>
-      </div>
-      ${(cat.domains||[]).length?`<div style="font-size:11px;color:#475569;font-family:monospace;margin-top:10px">${(cat.domains||[]).slice(0,5).join(' · ')}${(cat.domains||[]).length>5?` +${(cat.domains||[]).length-5} more`:''}</div>`:''}
-    </div>`).join('');
-}
-function openCatModal(id=null){
-  eCatId=id; $('cm-title').textContent=id?'✏ Edit Category':'📁 New Category';
-  $('cm-al').style.display='none';
-  if(id){const cat=D.customCategories.find(c=>c.id===id);if(!cat)return;$('cm-name').value=cat.name;$('cm-doms').value=(cat.domains||[]).join('\n');}
-  else{$('cm-name').value='';$('cm-doms').value='';}
-  open_('cat-modal');
-}
-function saveCat(){
-  const name=$('cm-name').value.trim();if(!name){showAl('cm-al','error','Name required');return;}
-  const doms=$('cm-doms').value.split('\n').map(l=>l.trim().toLowerCase()).filter(Boolean);
-  const obj={name,domains:doms};
-  if(eCatId){const i=D.customCategories.findIndex(c=>c.id===eCatId);if(i>=0)D.customCategories[i]={...D.customCategories[i],...obj};}
-  else D.customCategories.push({id:'cc_'+Date.now(),...obj});
-  close_('cat-modal'); renderCats();
-}
-function delCat(id){if(!confirm('Delete?'))return;D.customCategories=D.customCategories.filter(c=>c.id!==id);renderCats();}
-
-// ── Users — NOTE: requires service role for admin API calls ──────────────────
-// These calls use the logged-in user's JWT. This only works if the logged-in
-// user is a Supabase service_role user OR if you set up an Edge Function.
-// For basic setups: manage users directly in the Supabase dashboard.
-async function loadUsers(){
-  $('users-tb').innerHTML='<tr><td colspan="4" class="loading">Loading users from Supabase auth...</td></tr>';
-  // Try to get users via admin API using logged-in JWT
-  // This will only succeed if the user has admin privileges
-  const ur=await sbf(`/auth/v1/admin/users?per_page=100`);
-  // Also get activity counts
-  const lr=await sbf(`/rest/v1/activity_logs?org_id=eq.${ORG}&select=user_email,ts&order=ts.desc&limit=5000`);
-  const logs=lr.ok?await lr.json():[];
-  const map={};for(const l of logs){if(!l.user_email)continue;if(!map[l.user_email]){map[l.user_email]={count:0,last:0};}map[l.user_email].count++;if(l.ts>map[l.user_email].last)map[l.user_email].last=l.ts;}
-
-  if(ur.ok){
-    const authUsers=(await ur.json()).users||[];
-    $('users-tb').innerHTML=authUsers.map(u=>
-      `<tr><td style="color:#a5b4fc">${esc(u.email)}</td>
-      <td style="color:#64748b;font-size:11px">${u.last_sign_in_at?fmtF(new Date(u.last_sign_in_at).getTime()):'Never'}</td>
-      <td style="font-weight:700">${map[u.email]?.count||0}</td>
-      <td><button class="btn btn-sm btn-ghost" onclick="filterUser('${esc(u.email)}')">Logs</button></td></tr>`
-    ).join('')||'<tr><td colspan="4" class="loading">No users</td></tr>';
-  } else {
-    // Fallback: show users from activity logs
-    $('users-tb').innerHTML=Object.entries(map).map(([email,info])=>
-      `<tr><td style="color:#a5b4fc">${esc(email)}</td>
-      <td style="color:#64748b;font-size:11px">${info.last?fmtF(info.last):'—'}</td>
-      <td style="font-weight:700">${info.count}</td>
-      <td><button class="btn btn-sm btn-ghost" onclick="filterUser('${esc(email)}')">Logs</button></td></tr>`
-    ).join('')||'<tr><td colspan="4" class="loading">No activity yet</td></tr>';
-  }
-}
-async function createUser(){
-  const e=$('u-email').value.trim(), p=$('u-pass').value;
-  if(!e||!p){showAl('u-al','error','Email and password required');return;}
-  showAl('u-al','error','User creation requires a Supabase Edge Function or the Supabase dashboard (Auth → Users → Invite). The service role key cannot be exposed in a public page.');
-}
-function filterUser(e){$('f-u').value=e;showPage('logs');}
-
-// ── Bypass Codes ──────────────────────────────────────────────────────────────
-function loadBypass(){
-  const t=D.bypassTokens||[];
-  $('bp-tb').innerHTML=t.map(b=>
-    `<tr><td style="font-family:monospace;font-weight:700;color:#a5b4fc">${esc(b.token)}</td>
-    <td>${esc(b.domain||'All')}</td>
-    <td>${b.durationMs?Math.round(b.durationMs/60000)+'min':'—'}</td>
-    <td style="color:#64748b">${esc(b.label||'—')}</td>
-    <td style="font-size:11px;color:#64748b">${b.expiresAt?fmtF(b.expiresAt):'—'}</td>
-    <td><button class="btn btn-sm btn-danger" onclick="delBypass('${esc(b.token)}')">✕</button></td></tr>`
-  ).join('')||'<tr><td colspan="6" class="loading">No codes</td></tr>';
-}
-function createBypass(){
-  let tok=($('bp-code').value||'').trim().toUpperCase()||'BYPASS-'+Math.random().toString(36).slice(2,6).toUpperCase()+Math.random().toString(36).slice(2,6).toUpperCase();
-  const dur=parseInt($('bp-dur').value||'30');
-  D.bypassTokens=D.bypassTokens||[];
-  D.bypassTokens.push({token:tok,domain:$('bp-dom').value.trim()||null,durationMs:dur*60000,label:$('bp-lbl').value.trim(),createdAt:Date.now(),expiresAt:Date.now()+dur*60000});
-  showAl('bp-al','success',`✓ Code: ${tok} — Push to Users to deploy it`);
-  $('bp-code').value=''; $('bp-lbl').value='';
-  loadBypass();
-}
-function delBypass(t){D.bypassTokens=(D.bypassTokens||[]).filter(b=>b.token!==t);loadBypass();}
-
-// ── URL Tester ────────────────────────────────────────────────────────────────
-function testUrl(){
-  const url=$('tu-url').value.trim(); if(!url)return;
-  let domain='';
-  try{domain=new URL(url.startsWith('http')?url:'https://'+url).hostname.replace(/^www\./,'');}catch{domain=url;}
-  const CAT_MAP={social:['facebook.com','twitter.com','instagram.com','tiktok.com','snapchat.com','linkedin.com','reddit.com'],news:['bbc.com','cnn.com','reuters.com','nytimes.com'],productivity:['google.com','microsoft.com','gmail.com','outlook.com','slack.com'],streaming:['youtube.com','netflix.com','spotify.com','twitch.tv'],gaming:['steam.com','epicgames.com','roblox.com'],shopping:['amazon.com','ebay.com','flipkart.com']};
-  let autoCat='unknown';
-  for(const[cat,doms]of Object.entries(CAT_MAP)){if(doms.some(d=>domain===d||domain.endsWith('.'+d))){autoCat=cat;break;}}
-  // Also check custom categories
-  for(const cc of D.customCategories){if((cc.domains||[]).some(d=>domain===d||domain.endsWith('.'+d))){autoCat=cc.name;break;}}
-
-  let matched=null;
-  for(const grp of D.policyGroups){
-    for(const pid of(grp.policyIds||[])){
-      const pol=D.orderedPolicies.find(p=>p.id===pid);
-      if(!pol||pol.enabled===false||(pol.activity||'browse')==='download')continue;
-      let m=false;
-      if(pol.type==='domain') m=(pol.conditions?.domains||[]).some(d=>domain===d||domain.endsWith('.'+d));
-      else if(pol.type==='category') m=(pol.conditions?.categories||[]).some(c=>c===autoCat);
-      else if(pol.type==='list'){
-        const ld=(pol.conditions?.listIds||[]).flatMap(lid=>{const l=D.urlLists.find(x=>x.id===lid);return l?.domains||[];});
-        m=ld.some(d=>domain===d||domain.endsWith('.'+d));
-      }
-      if(m){matched={pol,grp};break;}
-    }
-    if(matched)break;
-  }
-  const def=D.policySettings?.defaultAction||'allow';
-  const action=matched?matched.pol.action:def;
-  const AC={block:'#f87171',warn:'#fbbf24',allow:'#10b981'};
-  const col=AC[action];
-  $('tu-res').innerHTML=`
-    <div style="background:${col}0d;border:1px solid ${col}33;border-radius:10px;padding:16px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <span style="font-size:28px">${action==='block'?'🚫':action==='warn'?'⚠️':'✅'}</span>
-        <div>
-          <div style="font-size:16px;font-weight:800;color:${col};text-transform:uppercase">${action}</div>
-          <div style="font-size:12px;color:#94a3b8">${esc(domain)}</div>
-        </div>
-      </div>
-      ${matched
-        ? `<div style="font-size:12px;color:#e2e8f0;margin-bottom:4px"><strong style="color:#a5b4fc">Policy:</strong> ${esc(matched.pol.name)} <span style="color:#475569">in group</span> ${esc(matched.grp.name)}</div>
-           <div style="font-size:11px;color:#64748b">Type: ${esc(matched.pol.type||'domain')} · Action: ${esc(matched.pol.action)}</div>`
-        : `<div style="font-size:12px;color:#64748b">No policy matched — applying default: <strong style="color:${col}">${def}</strong></div>`}
-      <div style="font-size:12px;color:#475569;margin-top:8px">Auto-category: <strong style="color:#818cf8">${esc(autoCat)}</strong></div>
-    </div>`;
-}
-
-// ── Close modals on background click ─────────────────────────────────────────
-document.querySelectorAll('.modal-bg').forEach(m => m.onclick = e => { if(e.target===m) m.classList.remove('open'); });
-
-// ── Auto-refresh dashboard every 30s ─────────────────────────────────────────
-setInterval(()=>{ if($('page-dashboard').classList.contains('active')&&TOK) loadDash(); }, 30000);
-</script>
 </body>
 </html>
