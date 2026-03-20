@@ -46,11 +46,11 @@ export async function saveData() {
     const check = await sbf(`/rest/v1/policies?org_id=eq.${ORG}&select=id`);
     const rows  = check.ok ? await check.json() : [];
 
-    const body = JSON.stringify({
-      payload:    D,
-      version:    Date.now(),
-      updated_at: new Date().toISOString(),
-    });
+    body: JSON.stringify({
+  payload:    D,
+  version:    Math.floor(Date.now() / 1000),  // Unix seconds, fits in integer
+  updated_at: new Date().toISOString(),
+}),
 
     let r;
     if (rows.length > 0) {
@@ -65,7 +65,7 @@ export async function saveData() {
       r = await sbf('/rest/v1/policies', {
         method:  'POST',
         headers: { 'Prefer': 'return=minimal' },
-        body:    JSON.stringify({ org_id: ORG, payload: D, version: Date.now() }),
+        body: JSON.stringify({ org_id: ORG, payload: D, version: Math.floor(Date.now() / 1000) }),
       });
     }
 
