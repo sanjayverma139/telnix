@@ -25,13 +25,15 @@ export function createBypass() {
                 Math.random().toString(36).slice(2,6).toUpperCase();
   const dur = parseInt($('bp-dur')?.value || '30');
   D.bypassTokens = D.bypassTokens || [];
+  const domain = $('bp-dom')?.value.trim() || null;
   D.bypassTokens.push({
-    token:     tok,
-    domain:    $('bp-dom')?.value.trim() || null,
+    token:      tok,
+    mode:       domain ? 'domain_timed' : 'timed',
+    domain:     domain,
     durationMs: dur * 60000,
-    label:     $('bp-lbl')?.value.trim() || '',
-    createdAt: Date.now(),
-    expiresAt: Date.now() + dur * 60000,
+    label:      $('bp-lbl')?.value.trim() || '',
+    createdAt:  Date.now(),
+    expiresAt:  Date.now() + dur * 60000,
   });
   showAlert('bp-al', 'success', `✓ Code: ${tok} — remember to Push to Users to deploy it`);
   if ($('bp-code')) $('bp-code').value = '';
