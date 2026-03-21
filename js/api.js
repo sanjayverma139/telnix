@@ -1,3 +1,5 @@
+// api.js — All Supabase REST API calls
+
 import { SB, ANON, ORG } from './config.js';
 import { TOK, D }        from './state.js';
 
@@ -17,10 +19,7 @@ export async function loadData() {
     if (!r.ok) { console.warn('[API] loadData failed:', r.status); return null; }
     const rows = await r.json();
     return rows[0]?.payload || null;
-  } catch (e) {
-    console.error('[API] loadData error:', e);
-    return null;
-  }
+  } catch (e) { console.error('[API] loadData error:', e); return null; }
 }
 
 export async function saveData() {
@@ -29,38 +28,21 @@ export async function saveData() {
     const rows  = check.ok ? await check.json() : [];
     const ver   = Math.floor(Date.now() / 1000);
 
-    let r;
-    if (rows.length > 0) {
-      r = await sbf(`/rest/v1/policies?org_id=eq.${ORG}`, {
-        method:  'PATCH',
-        headers: { 'Prefer': 'return=minimal' },
-        body: JSON.stringify({
-          payload:    D,
-          version:    ver,
-          updated_at: new Date().toISOString(),
-        }),
-      });
-    } else {
-      r = await sbf('/rest/v1/policies', {
-        method:  'POST',
-        headers: { 'Prefer': 'return=minimal' },
-        body: JSON.stringify({
-          org_id:  ORG,
-          payload: D,
-          version: ver,
-        }),
-      });
-    }
+    const r = rows.length > 0
+      ? await sbf(`/rest/v1/policies?org_id=eq.${ORG}`, {
+          method: 'PATCH',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ payload: D, version: ver, updated_at: new Date().toISOString() }),
+        })
+      : await sbf('/rest/v1/policies', {
+          method: 'POST',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ org_id: ORG, payload: D, version: ver }),
+        });
 
-    if (!r.ok) {
-      const text = await r.text().catch(() => '');
-      console.error('[API] saveData failed:', r.status, text);
-    }
+    if (!r.ok) { const t = await r.text().catch(() => ''); console.error('[API] saveData failed:', r.status, t); }
     return r.ok;
-  } catch (e) {
-    console.error('[API] saveData error:', e);
-    return false;
-  }
+  } catch (e) { console.error('[API] saveData error:', e); return false; }
 }
 
 export async function fetchLogs(filters = {}) {
@@ -70,19 +52,20 @@ export async function fetchLogs(filters = {}) {
   const r = await sbf(url);
   if (!r.ok) return [];
   let logs = await r.json();
-  if (filters.search)
-    logs = logs.filter(l => (l.domain||'').includes(filters.search) ||
-                            (l.user_email||'').includes(filters.search));
-  if (filters.userEmail)
-    logs = logs.filter(l => (l.user_email||'').includes(filters.userEmail));
+  if (filters.search)    logs = logs.filter(l => (l.domain||'').toLowerCase().includes(filters.search) || (l.user_email||'').toLowerCase().includes(filters.search) || (l.url||'').toLowerCase().includes(filters.search));
+  if (filters.userEmail) logs = logs.filter(l => (l.user_email||'').toLowerCase().includes(filters.userEmail));
+  if (filters.category)  logs = logs.filter(l => (l.category||'') === filters.category);
+  if (filters.today)     { const midnight = new Date(); midnight.setHours(0,0,0,0); logs = logs.filter(l => l.ts >= midnight.getTime()); }
+  if (filters.proceeded) logs = logs.filter(l => l.proceeded === true);
+  if (filters.knownMalicious) logs = logs.filter(l => l.known_malicious === true);
+  if (filters.highRisk)  logs = logs.filter(l => (l.threat_score||0) >= 55);
+  if (filters.medRisk)   logs = logs.filter(l => (l.threat_score||0) >= 30 && (l.threat_score||0) < 55);
   return logs;
 }
 
 export async function fetchDashStats() {
   const since = Date.now() - 86400000;
-  const r = await sbf(
-    `/rest/v1/activity_logs?org_id=eq.${ORG}&ts=gte.${since}&order=ts.desc&limit=300`
-  );
+  const r = await sbf(`/rest/v1/activity_logs?org_id=eq.${ORG}&ts=gte.${since}&order=ts.desc&limit=500`);
   if (!r.ok) return [];
   return r.json();
 }
@@ -95,12 +78,10 @@ export async function fetchAuthUsers() {
 }
 
 export async function fetchUserLogMap() {
-  const r = await sbf(
-    `/rest/v1/activity_logs?org_id=eq.${ORG}&select=user_email,ts&order=ts.desc&limit=5000`
-  );
+  const r = await sbf(`/rest/v1/activity_logs?org_id=eq.${ORG}&select=user_email,ts&order=ts.desc&limit=5000`);
   if (!r.ok) return {};
   const logs = await r.json();
-  const map  = {};
+  const map = {};
   for (const l of logs) {
     if (!l.user_email) continue;
     if (!map[l.user_email]) map[l.user_email] = { count: 0, last: 0 };

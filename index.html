@@ -1,140 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Telnix Admin Panel</title>
-  <link rel="stylesheet" href="css/styles.css">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Telnix Admin Panel</title>
+<link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-<!-- ── Login Screen ──────────────────────────────────────────────────────── -->
+<!-- Login -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="logo-row">
-      <div class="logo-icon">🛡</div>
-      <div>
-        <div class="logo-name">TELNIX</div>
-        <div class="logo-sub">ADMIN PANEL</div>
-      </div>
-    </div>
-    <h2>Admin Sign In</h2>
-    <p class="sub">Sign in to manage policies and view activity</p>
-    <label for="l-email">Email</label>
-    <input type="email" id="l-email" placeholder="admin@company.com" autocomplete="email">
-    <label for="l-pass">Password</label>
-    <input type="password" id="l-pass" placeholder="Password" autocomplete="current-password">
+    <div class="logo-row"><div class="logo-icon">🛡</div><div><div class="logo-name">TELNIX</div><div class="logo-sub">ADMIN PANEL</div></div></div>
+    <h2>Admin Sign In</h2><p class="sub">Sign in to manage policies and view activity</p>
+    <label>Email</label><input type="email" id="l-email" placeholder="admin@company.com" autocomplete="email">
+    <label>Password</label><input type="password" id="l-pass" placeholder="Password">
     <button class="btn btn-primary btn-full" id="l-btn">Sign In</button>
     <div class="err" id="l-err"></div>
   </div>
 </div>
 
-<!-- ── App Shell ─────────────────────────────────────────────────────────── -->
+<!-- App -->
 <div id="app">
-
-  <!-- Sidebar -->
   <div class="sidebar">
-    <div class="sb-logo">
-      <div class="logo-icon">🛡</div>
-      <div class="logo-name">TELNIX</div>
-    </div>
-
+    <div class="sb-logo"><div class="logo-icon">🛡</div><div class="logo-name">TELNIX</div></div>
     <div class="sb-section">Overview</div>
     <div class="nav active" data-page="dashboard">📊 Dashboard</div>
     <div class="nav" data-page="logs">📋 Activity Logs</div>
-
     <div class="sb-section">Policy</div>
     <div class="nav" data-page="policies">🛡 Policies</div>
+    <div class="nav" data-page="categoryPolicies">🏷 Category Rules</div>
     <div class="nav" data-page="urllists">📋 URL Lists</div>
     <div class="nav" data-page="filetypes">📝 File Type Lists</div>
     <div class="nav" data-page="categories">📁 Custom Categories</div>
-
     <div class="sb-section">Access</div>
     <div class="nav" data-page="users">👥 Users</div>
     <div class="nav" data-page="bypass">🔑 Bypass Codes</div>
-
     <div class="sb-section">Tools</div>
     <div class="nav" data-page="urltester">🔍 URL Tester</div>
-
+    <div class="nav" data-page="config">⚙️ Configuration</div>
     <div class="sb-footer">
       <div class="sb-user" id="adm-email-lbl"></div>
       <button class="btn btn-sm btn-danger" id="logout-btn">Sign Out</button>
     </div>
   </div>
 
-  <!-- Main content -->
   <div class="main">
 
-    <!-- ── Dashboard ──────────────────────────────────────────────────────── -->
+    <!-- Dashboard -->
     <div class="page active" id="page-dashboard">
       <div class="page-header">
-        <div>
-          <div class="page-title">Dashboard</div>
-          <div class="page-sub">Last 24 hours across all users</div>
-        </div>
+        <div><div class="page-title">Dashboard</div><div class="page-sub">Last 24 hours across all users</div></div>
         <button class="btn btn-ghost btn-sm" id="btn-dash-refresh">🔄 Refresh</button>
       </div>
       <div class="stats">
-        <div class="stat"><div class="stat-num" id="s-t" style="color:#818cf8">—</div><div class="stat-lbl">Total Events</div></div>
-        <div class="stat"><div class="stat-num" id="s-b" style="color:#f87171">—</div><div class="stat-lbl">Blocked</div></div>
-        <div class="stat"><div class="stat-num" id="s-w" style="color:#fbbf24">—</div><div class="stat-lbl">Warned</div></div>
-        <div class="stat"><div class="stat-num" id="s-u" style="color:#10b981">—</div><div class="stat-lbl">Active Users</div></div>
+        <div class="stat dash-stat" data-filter="block"><div class="stat-num" id="s-t" style="color:#818cf8">—</div><div class="stat-lbl">Total</div></div>
+        <div class="stat dash-stat" data-filter="block"><div class="stat-num" id="s-b" style="color:#f87171">—</div><div class="stat-lbl">Blocked</div><div class="stat-hint">CLICK TO VIEW ›</div></div>
+        <div class="stat dash-stat" data-filter="warn"><div class="stat-num" id="s-w" style="color:#fbbf24">—</div><div class="stat-lbl">Warned</div><div class="stat-hint">CLICK TO VIEW ›</div></div>
+        <div class="stat dash-stat" data-filter="allow"><div class="stat-num" id="s-a" style="color:#10b981">—</div><div class="stat-lbl">Allowed</div><div class="stat-hint">CLICK TO VIEW ›</div></div>
+        <div class="stat dash-stat" data-filter="bypassed"><div class="stat-num" id="s-bp" style="color:#a78bfa">—</div><div class="stat-lbl">Bypassed</div><div class="stat-hint">CLICK TO VIEW ›</div></div>
+        <div class="stat"><div class="stat-num" id="s-u" style="color:#34d399">—</div><div class="stat-lbl">Active Users</div></div>
       </div>
-      <div class="card">
-        <div class="card-title">Recent Activity</div>
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr><th>Time</th><th>User</th><th>Domain</th><th>Activity</th><th>Action</th><th>Policy</th></tr></thead>
-            <tbody id="dash-tb"><tr><td colspan="6" class="loading">Loading...</td></tr></tbody>
-          </table>
-        </div>
+      <div class="card"><div class="card-title">Category Breakdown (Today)</div><div id="dash-cat-chart"><div style="color:#475569;font-size:12px">Loading...</div></div></div>
+      <div class="card"><div class="card-title">Recent Activity</div>
+        <div class="tbl-wrap"><table><thead><tr><th>Time</th><th>User</th><th>Domain</th><th>Activity</th><th>Action</th><th>Policy</th></tr></thead>
+        <tbody id="dash-tb"><tr><td colspan="6" class="loading">Loading...</td></tr></tbody></table></div>
       </div>
     </div>
 
-    <!-- ── Activity Logs ───────────────────────────────────────────────────── -->
+    <!-- Activity Logs -->
     <div class="page" id="page-logs">
       <div class="page-header">
-        <div>
-          <div class="page-title">Activity Logs</div>
-          <div class="page-sub">All user browsing and download activity</div>
-        </div>
+        <div><div class="page-title">Activity Logs</div><div class="page-sub">All user browsing and download activity</div></div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-ghost btn-sm" id="btn-logs-refresh">🔄 Refresh</button>
           <button class="btn btn-success btn-sm" id="btn-export-csv">⬇ Export CSV</button>
         </div>
       </div>
-      <div class="filters">
-        <input type="text"  id="f-s"  placeholder="Search domain / user..." style="flex:1;max-width:none;margin:0">
-        <select id="f-a"  style="width:auto;margin:0">
-          <option value="">All Actions</option>
-          <option value="block">Block</option>
-          <option value="warn">Warn</option>
-          <option value="allow">Allow</option>
-        </select>
-        <select id="f-ac" style="width:auto;margin:0">
-          <option value="">All Activities</option>
-          <option value="browse">Browse</option>
-          <option value="download">Download</option>
-        </select>
-        <input type="text" id="f-u" placeholder="Filter by email..." style="max-width:200px;margin:0">
+      <!-- Filter bar -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:6px;background:#060d1a;border:1px solid rgba(99,102,241,.3);border-radius:8px;padding:6px 10px;flex:1;min-width:0">
+          <span style="color:#64748b;font-size:13px;flex-shrink:0">🔍</span>
+          <input type="text" id="log-search" placeholder="Search domain, user, URL..." style="background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;width:100%;min-width:0;margin:0">
+        </div>
+        <div style="position:relative">
+          <button id="btn-add-log-filter" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">＋ ADD FILTER</button>
+          <div id="log-filter-dd" style="display:none;position:absolute;top:38px;left:0;background:#0d1424;border:1px solid rgba(99,102,241,.3);border-radius:12px;width:220px;z-index:500;box-shadow:0 8px 32px rgba(0,0,0,.6);overflow:hidden">
+            <div style="padding:8px 0">
+              <div style="padding:6px 14px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px">Action</div>
+              <div class="lf-item" data-lf-type="action" data-lf-val="block" data-lf-label="Action = Block">🔴 Block</div>
+              <div class="lf-item" data-lf-type="action" data-lf-val="warn"  data-lf-label="Action = Warn">🟡 Warn</div>
+              <div class="lf-item" data-lf-type="action" data-lf-val="allow" data-lf-label="Action = Allow">🟢 Allow</div>
+              <div style="border-top:1px solid rgba(255,255,255,.06);margin:4px 0"></div>
+              <div style="padding:6px 14px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px">Threat</div>
+              <div class="lf-item" data-lf-type="threat" data-lf-val="malicious" data-lf-label="Known Malicious">🦠 Known Malicious</div>
+              <div class="lf-item" data-lf-type="threat" data-lf-val="high" data-lf-label="Risk ≥ 55 (High)">🔴 High Risk (≥55)</div>
+              <div class="lf-item" data-lf-type="threat" data-lf-val="medium" data-lf-label="Risk 30–54 (Medium)">🟡 Medium Risk (30–54)</div>
+              <div style="border-top:1px solid rgba(255,255,255,.06);margin:4px 0"></div>
+              <div style="padding:6px 14px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px">Result</div>
+              <div class="lf-item" data-lf-type="proceeded" data-lf-val="true" data-lf-label="User Bypassed Warning">↩ User Bypassed Warning</div>
+              <div class="lf-item" data-lf-type="today" data-lf-val="true" data-lf-label="Today Only">📅 Today Only</div>
+              <div style="border-top:1px solid rgba(255,255,255,.06);margin:4px 0"></div>
+              <div style="padding:6px 14px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px">Activity</div>
+              <div class="lf-item" data-lf-type="activity" data-lf-val="browse" data-lf-label="Activity = Browse">🌐 Browse</div>
+              <div class="lf-item" data-lf-type="activity" data-lf-val="download" data-lf-label="Activity = Download">📥 Download</div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr><th>Time</th><th>User</th><th>Domain</th><th>Activity</th><th>Action</th><th>Category</th><th>Policy</th><th>File</th></tr></thead>
-          <tbody id="logs-tb"><tr><td colspan="8" class="loading">Loading...</td></tr></tbody>
-        </table>
-      </div>
+      <div id="log-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;min-height:0"></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Time</th><th>User</th><th>Domain</th><th>Activity</th><th>Action</th><th>Category</th><th>🛡 Score</th><th>Policy</th><th></th></tr></thead>
+      <tbody id="logs-tb"><tr><td colspan="9" class="loading">Loading...</td></tr></tbody></table></div>
     </div>
 
-    <!-- ── Policies ────────────────────────────────────────────────────────── -->
+    <!-- Policies -->
     <div class="page" id="page-policies">
       <div class="page-header">
-        <div>
-          <div class="page-title">Policies</div>
-          <div class="page-sub">First match wins — top to bottom through groups</div>
-        </div>
+        <div><div class="page-title">Policies</div><div class="page-sub">First match wins — top to bottom through groups</div></div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost btn-sm"   id="btn-new-group">📁 New Group</button>
+          <button class="btn btn-ghost btn-sm" id="btn-new-group">📁 New Group</button>
           <button class="btn btn-primary btn-sm" id="btn-new-policy">+ New Policy</button>
           <button class="btn btn-success btn-sm" id="push-btn">☁ Push to Users</button>
         </div>
@@ -142,130 +125,135 @@
       <div class="alert" id="pol-al"></div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
         <span style="font-size:12px;color:#64748b">Default Action:</span>
-        <select id="def-action" style="width:auto;margin:0;padding:6px 12px">
-          <option value="allow">Allow</option>
-          <option value="warn">Warn</option>
-          <option value="block">Block</option>
-        </select>
+        <select id="def-action" style="width:auto;margin:0;padding:6px 12px"><option value="allow">Allow</option><option value="warn">Warn</option><option value="block">Block</option></select>
       </div>
       <div id="pol-con"><div class="loading">Loading...</div></div>
     </div>
 
-    <!-- ── URL Lists ───────────────────────────────────────────────────────── -->
+    <!-- Category Policies -->
+    <div class="page" id="page-categoryPolicies">
+      <div class="page-header">
+        <div><div class="page-title">Category Rules</div><div class="page-sub">Set default actions for auto-detected site categories (social, gambling, adult, etc.)</div></div>
+        <button class="btn btn-success btn-sm" id="btn-save-cat-policies">☁ Save &amp; Push to Users</button>
+      </div>
+      <div class="alert" id="cat-policy-alert"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:6px;background:#060d1a;border:1px solid rgba(99,102,241,.3);border-radius:8px;padding:6px 10px;flex:1">
+          <span style="color:#64748b;font-size:13px">🔍</span>
+          <input type="text" id="cat-policy-search" placeholder="Search categories..." style="background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;width:100%;margin:0">
+        </div>
+        <span id="cat-policy-count" style="font-size:12px;color:#64748b;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:5px 14px;white-space:nowrap"></span>
+      </div>
+      <div id="cat-policy-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px"></div>
+    </div>
+
+    <!-- URL Lists -->
     <div class="page" id="page-urllists">
       <div class="page-header">
-        <div>
-          <div class="page-title">URL Lists</div>
-          <div class="page-sub">Named domain lists referenced in policies</div>
-        </div>
+        <div><div class="page-title">URL Lists</div><div class="page-sub">Named domain lists referenced in policies</div></div>
         <button class="btn btn-primary btn-sm" id="btn-new-urllist">+ New URL List</button>
       </div>
-      <input type="text" id="ul-search" placeholder="🔍  Search URL lists by name..." style="margin-bottom:14px">
+      <input type="text" id="ul-search" placeholder="🔍  Search URL lists..." style="margin-bottom:14px">
       <div id="ul-con"><div class="loading">Loading...</div></div>
     </div>
 
-    <!-- ── File Type Lists ─────────────────────────────────────────────────── -->
+    <!-- File Type Lists -->
     <div class="page" id="page-filetypes">
       <div class="page-header">
-        <div>
-          <div class="page-title">File Type Lists</div>
-          <div class="page-sub">Extension groups for download policies</div>
-        </div>
+        <div><div class="page-title">File Type Lists</div><div class="page-sub">Extension groups for download policies</div></div>
         <button class="btn btn-primary btn-sm" id="btn-new-filetype">+ New File Type List</button>
       </div>
       <div id="ft-con"><div class="loading">Loading...</div></div>
     </div>
 
-    <!-- ── Custom Categories ───────────────────────────────────────────────── -->
+    <!-- Custom Categories -->
     <div class="page" id="page-categories">
       <div class="page-header">
-        <div>
-          <div class="page-title">Custom Categories</div>
-          <div class="page-sub">Group domains into named categories for use in policies</div>
-        </div>
-        <button class="btn btn-primary btn-sm" id="btn-new-cat">+ New Category</button>
+        <div><div class="page-title">Custom Categories</div><div class="page-sub">Combine URL lists, predefined categories, and exclusions into reusable groups</div></div>
+        <button class="btn btn-primary btn-sm" id="btn-new-cc">+ New Category</button>
       </div>
-      <input type="text" id="cat-search" placeholder="🔍  Search categories by name..." style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:6px;background:#060d1a;border:1px solid rgba(99,102,241,.3);border-radius:8px;padding:6px 10px;flex:1">
+          <span style="color:#64748b">🔍</span>
+          <input type="text" id="cat-search" placeholder="Search..." style="background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;width:100%;margin:0">
+        </div>
+        <span id="custom-cat-count" style="font-size:12px;color:#64748b;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:5px 14px;white-space:nowrap"></span>
+      </div>
       <div id="cat-con"><div class="loading">Loading...</div></div>
     </div>
 
-    <!-- ── Users ───────────────────────────────────────────────────────────── -->
+    <!-- Users -->
     <div class="page" id="page-users">
-      <div class="page-header">
-        <div>
-          <div class="page-title">Users</div>
-          <div class="page-sub">Manage who can log into the extension</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Create New User</div>
+      <div class="page-header"><div><div class="page-title">Users</div><div class="page-sub">Manage who can log into the extension</div></div></div>
+      <div class="card"><div class="card-title">Create New User</div>
         <div class="alert" id="u-al"></div>
         <div class="grid2">
           <div><label>Email *</label><input type="email" id="u-email" placeholder="user@company.com"></div>
           <div><label>Password *</label><input type="password" id="u-pass" placeholder="Set a password"></div>
         </div>
         <button class="btn btn-primary" id="btn-create-user">+ Create User</button>
-        <p style="font-size:11px;color:#475569;margin-top:10px">
-          ⚠ User creation via the admin panel is disabled for security. Use the
-          <a href="https://supabase.com/dashboard" target="_blank" style="color:#818cf8">Supabase Dashboard</a>
-          → Authentication → Users → Invite user.
-        </p>
+        <p style="font-size:11px;color:#475569;margin-top:10px">User creation requires the <a href="https://supabase.com/dashboard" target="_blank" style="color:#818cf8">Supabase Dashboard</a> → Authentication → Users → Invite user.</p>
       </div>
-      <div class="card">
-        <div class="card-title">All Users</div>
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr><th>Email</th><th>Last Sign In</th><th>Total Logs</th><th></th></tr></thead>
-            <tbody id="users-tb"><tr><td colspan="4" class="loading">Loading...</td></tr></tbody>
-          </table>
-        </div>
+      <div class="card"><div class="card-title">All Users</div>
+        <div class="tbl-wrap"><table><thead><tr><th>Email</th><th>Last Sign In</th><th>Total Logs</th><th></th></tr></thead>
+        <tbody id="users-tb"><tr><td colspan="4" class="loading">Loading...</td></tr></tbody></table></div>
       </div>
     </div>
 
-    <!-- ── Bypass Codes ────────────────────────────────────────────────────── -->
+    <!-- Bypass Codes -->
     <div class="page" id="page-bypass">
-      <div class="page-header">
-        <div>
-          <div class="page-title">Bypass Codes</div>
-          <div class="page-sub">Time-limited codes that let users pass through a block</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Create Bypass Code</div>
+      <div class="page-header"><div><div class="page-title">Bypass Codes</div><div class="page-sub">Time-limited codes that let users pass through a block</div></div></div>
+      <div class="card"><div class="card-title">Create Bypass Code</div>
         <div class="alert" id="bp-al"></div>
         <div class="grid2">
-          <div><label>Code (blank = auto-generate)</label><input type="text" id="bp-code" placeholder="BYPASS-ABC123" style="text-transform:uppercase"></div>
+          <div><label>Code (blank = auto)</label><input type="text" id="bp-code" placeholder="BYPASS-ABC123" style="text-transform:uppercase"></div>
           <div><label>Duration (minutes)</label><input type="number" id="bp-dur" value="30" min="1"></div>
-          <div><label>Domain (blank = all sites)</label><input type="text" id="bp-dom" placeholder="github.com"></div>
+          <div><label>Domain (blank = all)</label><input type="text" id="bp-dom" placeholder="youtube.com"></div>
           <div><label>Label / Reason</label><input type="text" id="bp-lbl" placeholder="Who requested this"></div>
         </div>
         <button class="btn btn-primary" id="btn-create-bypass">+ Create Code</button>
       </div>
-      <div class="card">
-        <div class="card-title">Active Codes</div>
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr><th>Code</th><th>Domain</th><th>Duration</th><th>Label</th><th>Expires</th><th></th></tr></thead>
-            <tbody id="bp-tb"><tr><td colspan="6" class="loading">No codes</td></tr></tbody>
-          </table>
-        </div>
+      <div class="card"><div class="card-title">Active Codes</div>
+        <div class="tbl-wrap"><table><thead><tr><th>Code</th><th>Domain</th><th>Duration</th><th>Label</th><th>Expires</th><th></th></tr></thead>
+        <tbody id="bp-tb"><tr><td colspan="6" class="loading">No codes</td></tr></tbody></table></div>
       </div>
     </div>
 
-    <!-- ── URL Tester ──────────────────────────────────────────────────────── -->
+    <!-- URL Tester -->
     <div class="page" id="page-urltester">
-      <div class="page-header">
-        <div>
-          <div class="page-title">URL Tester</div>
-          <div class="page-sub">Test any URL against the currently loaded policies</div>
-        </div>
-      </div>
+      <div class="page-header"><div><div class="page-title">URL Tester</div><div class="page-sub">Test a URL against current policies — shows all matching policies in evaluation order</div></div></div>
       <div class="card">
         <div style="display:flex;gap:10px">
-          <input type="text" id="tu-url" placeholder="https://example.com" style="margin:0;flex:1">
+          <input type="text" id="tu-url" placeholder="https://youtube.com" style="margin:0;flex:1">
           <button class="btn btn-primary" id="btn-test-url">Test URL</button>
         </div>
         <div id="tu-res" style="margin-top:16px"></div>
+      </div>
+    </div>
+
+    <!-- Configuration -->
+    <div class="page" id="page-config">
+      <div class="page-header">
+        <div><div class="page-title">Configuration</div><div class="page-sub">Agent settings synced to all extension users via Supabase</div></div>
+        <button class="btn btn-success btn-sm" id="btn-save-config">☁ Save &amp; Push to All Agents</button>
+      </div>
+      <div class="alert" id="cfg-alert"></div>
+      <div class="card"><div class="card-title">Agent Settings</div>
+        <div class="grid2">
+          <div><label>Agent ID <span style="color:#475569;font-weight:400;text-transform:none">(optional identifier)</span></label><input type="text" id="cfg-agent-id" placeholder="e.g. AGENT-NYC-01"></div>
+          <div><label>Timezone</label><input type="text" id="cfg-timezone" placeholder="e.g. Asia/Kolkata"></div>
+          <div>
+            <label>Google Safe Browsing API Key <span style="color:#475569;font-weight:400;text-transform:none">(optional — enables live malware/phishing detection)</span></label>
+            <input type="password" id="cfg-gsb-key" placeholder="AIza...">
+            <div style="font-size:10px;color:#475569;margin-top:-8px;margin-bottom:8px">Get a free key at <a href="https://console.cloud.google.com" target="_blank" style="color:#818cf8">console.cloud.google.com</a> → Enable Safe Browsing API</div>
+          </div>
+          <div><label>Bypass Mode</label>
+            <select id="cfg-bypass-mode" style="margin:0">
+              <option value="local">Local only (codes stored in extension)</option>
+              <option value="remote">Remote (verify via API endpoint)</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -279,45 +267,55 @@
   <div class="modal">
     <div class="modal-title">🛡 <span id="pm-title">New Policy</span></div>
     <div class="alert" id="pm-al"></div>
-
-    <div class="grid2">
-      <div><label>Policy Name *</label><input type="text" id="pm-name" placeholder="Block Social Media"></div>
-      <div><label>Group *</label><select id="pm-grp"></select></div>
+    <div class="grid2" style="margin-bottom:14px">
+      <div><label>Policy Name *</label><input type="text" id="pm-name" placeholder="e.g. Block Social Media" style="margin:0"></div>
+      <div><label>Group *</label><select id="pm-grp" style="margin:0"></select></div>
     </div>
-
     <label>Policy Type</label>
     <div class="type-cards">
-      <div class="type-card sel" data-t="domain"><div class="type-card-icon">🌐</div><div class="type-card-name">Domain</div><div class="type-card-sub">Specific domains</div></div>
-      <div class="type-card" data-t="category"><div class="type-card-icon">📁</div><div class="type-card-name">Category</div><div class="type-card-sub">Content category</div></div>
-      <div class="type-card" data-t="list"><div class="type-card-icon">📋</div><div class="type-card-name">URL List</div><div class="type-card-sub">Custom list</div></div>
-      <div class="type-card" data-t="threat"><div class="type-card-icon">⚡</div><div class="type-card-name">Threat Score</div><div class="type-card-sub">Heuristic risk</div></div>
-      <div class="type-card" data-t="reputation"><div class="type-card-icon">🧠</div><div class="type-card-name">Known Malicious</div><div class="type-card-sub">Reputation DB</div></div>
+      <div class="pm-type-card sel" data-t="domain"><div class="type-card-icon">🌐</div><div class="type-card-name">Domain</div><div class="type-card-sub">Specific domains</div></div>
+      <div class="pm-type-card" data-t="category"><div class="type-card-icon">📁</div><div class="type-card-name">Category</div><div class="type-card-sub">Content category</div></div>
+      <div class="pm-type-card" data-t="list"><div class="type-card-icon">📋</div><div class="type-card-name">URL List</div><div class="type-card-sub">Custom list</div></div>
+      <div class="pm-type-card" data-t="customcat"><div class="type-card-icon">📂</div><div class="type-card-name">Custom Cat.</div><div class="type-card-sub">Your categories</div></div>
+      <div class="pm-type-card" data-t="combo"><div class="type-card-icon">🔀</div><div class="type-card-name">Combo</div><div class="type-card-sub">Mix of criteria</div></div>
+      <div class="pm-type-card" data-t="threat"><div class="type-card-icon">⚡</div><div class="type-card-name">Threat Score</div><div class="type-card-sub">Heuristic risk</div></div>
+      <div class="pm-type-card" data-t="reputation"><div class="type-card-icon">🧠</div><div class="type-card-name">Known Malicious</div><div class="type-card-sub">Reputation DB</div></div>
     </div>
 
+    <!-- Criteria sections -->
     <div id="crit-domain">
-      <label>Domains (one per line, subdomains matched automatically)</label>
-      <textarea id="pm-doms" placeholder="facebook.com&#10;twitter.com&#10;instagram.com"></textarea>
+      <label>Domains (one per line)</label>
+      <textarea id="pm-doms" placeholder="facebook.com&#10;instagram.com&#10;tiktok.com"></textarea>
     </div>
-
     <div id="crit-category" class="hid">
-      <label>Selected Categories</label>
+      <label>Categories</label>
       <div class="chip-wrap" id="pm-cat-chips"></div>
       <input type="text" id="pm-cat-search" placeholder="Search categories..." style="margin-bottom:6px">
       <div class="cat-list" id="pm-cat-list"></div>
     </div>
-
     <div id="crit-list" class="hid">
-      <label>URL Lists (select one or more)</label>
+      <label>URL Lists</label>
       <div id="pm-list-cbs" style="display:flex;flex-direction:column;gap:6px;padding:10px;background:#060d1a;border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:14px;max-height:160px;overflow-y:auto"></div>
     </div>
-
+    <div id="crit-customcat" class="hid">
+      <label>Custom Categories</label>
+      <div class="chip-wrap" id="pm-cc-chips"></div>
+      <div class="cat-list" id="pm-cc-list" style="margin-bottom:14px"></div>
+    </div>
+    <div id="crit-combo" class="hid">
+      <label>Domains (optional)</label>
+      <textarea id="pm-combo-doms" rows="2" placeholder="domain1.com&#10;domain2.com"></textarea>
+      <label>Categories (optional — same as Category type)</label>
+      <div style="font-size:11px;color:#64748b;margin-bottom:8px">Use the Category criteria type for category selection. Combo applies domains + lists together.</div>
+      <label>URL Lists (optional)</label>
+      <div id="pm-combo-list-cbs" style="display:flex;flex-direction:column;gap:6px;padding:10px;background:#060d1a;border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:14px;max-height:120px;overflow-y:auto"></div>
+    </div>
     <div id="crit-threat" class="hid">
       <div class="grid2">
-        <div><label>Operator</label><select id="pm-sop"><option value="gte">≥ at least</option><option value="gt">&gt; more than</option></select></div>
-        <div><label>Threshold (0–100)</label><input type="number" id="pm-sthr" value="55" min="0" max="100"></div>
+        <div><label>Operator</label><select id="pm-sop" style="margin:0"><option value="gte">≥ at least</option><option value="gt">&gt; more than</option></select></div>
+        <div><label>Threshold (0–100)</label><input type="number" id="pm-sthr" value="55" min="0" max="100" style="margin:0"></div>
       </div>
     </div>
-
     <div id="crit-reputation" class="hid">
       <div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:12px;font-size:12px;color:#fbbf24;margin-bottom:14px">
         Blocks URLs confirmed malicious by URLhaus or Google Safe Browsing reputation database.
@@ -330,21 +328,42 @@
       <button class="abtn" data-a="warn">🟡 Warn</button>
       <button class="abtn" data-a="allow">🟢 Allow</button>
     </div>
-
     <label>Activity</label>
     <div class="act-btns">
       <button class="abtn sel-act" data-v="browse">🌐 Browse</button>
       <button class="abtn" data-v="download">📥 Download</button>
       <button class="abtn" data-v="all">🔒 Both</button>
     </div>
+    <div id="pm-ftrow" class="hid"><label>File Type List (blank = all)</label><select id="pm-ftl" style="margin-bottom:14px"></select></div>
 
-    <div id="pm-ftrow" class="hid">
-      <label>File Type List (blank = all types)</label>
-      <select id="pm-ftl"></select>
+    <!-- Schedule -->
+    <div style="background:#0a1120;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <input type="checkbox" id="pm-sched-enabled" style="width:16px;height:16px;accent-color:#6366f1;margin:0">
+        <label style="text-transform:none;letter-spacing:0;font-size:13px;color:#e2e8f0;margin:0">Enable Schedule</label>
+      </div>
+      <div id="pm-sched-fields" style="display:none">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <div class="pm-day-btn" data-day="Mon">Mon</div>
+          <div class="pm-day-btn" data-day="Tue">Tue</div>
+          <div class="pm-day-btn" data-day="Wed">Wed</div>
+          <div class="pm-day-btn" data-day="Thu">Thu</div>
+          <div class="pm-day-btn" data-day="Fri">Fri</div>
+          <div class="pm-day-btn" data-day="Sat">Sat</div>
+          <div class="pm-day-btn" data-day="Sun">Sun</div>
+        </div>
+        <div class="grid2">
+          <div><label>Start Time</label><input type="time" id="pm-sched-start" value="09:00" style="margin:0"></div>
+          <div><label>End Time</label><input type="time" id="pm-sched-end" value="17:00" style="margin:0"></div>
+        </div>
+        <div style="margin-top:10px"><label>Outside Schedule Action</label>
+          <select id="pm-sched-outside" style="margin:0"><option value="allow">Allow</option><option value="warn">Warn</option><option value="block">Block</option></select>
+        </div>
+      </div>
     </div>
 
     <label>Note (shown to user on block/warn page)</label>
-    <input type="text" id="pm-note" placeholder="Optional explanation for the user">
+    <input type="text" id="pm-note" placeholder="Optional explanation for the user" style="margin-bottom:14px">
 
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
       <span style="font-size:12px;color:#94a3b8">Enabled</span>
@@ -358,7 +377,7 @@
   </div>
 </div>
 
-<!-- New Group Modal -->
+<!-- Group Modal -->
 <div class="modal-bg" id="grp-modal">
   <div class="modal modal-sm">
     <div class="modal-title">📁 New Group</div>
@@ -371,15 +390,12 @@
   </div>
 </div>
 
-<!-- URL List / File Type List Modal (shared) -->
+<!-- URL List / File Type Modal -->
 <div class="modal-bg" id="list-modal">
   <div class="modal">
     <div class="modal-title" id="lm-title">📋 New List</div>
     <div class="alert" id="lm-al"></div>
-    <div class="grid2">
-      <div><label>Name *</label><input type="text" id="lm-name" placeholder="My List"></div>
-      <div><label>Description</label><input type="text" id="lm-desc" placeholder="Optional description"></div>
-    </div>
+    <div class="grid2"><div><label>Name *</label><input type="text" id="lm-name" placeholder="My List"></div><div><label>Description</label><input type="text" id="lm-desc"></div></div>
     <label id="lm-lbl">Domains (one per line)</label>
     <textarea id="lm-con" rows="8" placeholder="facebook.com&#10;twitter.com"></textarea>
     <div class="modal-footer">
@@ -390,23 +406,41 @@
 </div>
 
 <!-- Custom Category Modal -->
-<div class="modal-bg" id="cat-modal">
+<div class="modal-bg" id="cc-modal">
   <div class="modal">
-    <div class="modal-title" id="cm-title">📁 New Category</div>
-    <div class="alert" id="cm-al"></div>
-    <label>Name *</label>
-    <input type="text" id="cm-name" placeholder="e.g. Cloud Storage">
-    <label>Domains (one per line)</label>
-    <textarea id="cm-doms" rows="6" placeholder="dropbox.com&#10;drive.google.com&#10;box.com"></textarea>
+    <div class="modal-title" id="cc-modal-title">📁 New Custom Category</div>
+    <div class="alert" id="cc-al"></div>
+    <div class="grid2">
+      <div><label>Name *</label><input type="text" id="cc-name" placeholder="e.g. Blocked Entertainment"></div>
+      <div><label>Description</label><input type="text" id="cc-desc" placeholder="Optional"></div>
+    </div>
+    <label>Domains (one per line, optional)</label>
+    <textarea id="cc-domains" rows="3" placeholder="domain1.com&#10;domain2.com"></textarea>
+    <label>Include Predefined Categories</label>
+    <div id="cc-pred-cats" style="display:flex;flex-wrap:wrap;gap:4px;padding:10px;background:#060d1a;border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:14px;max-height:130px;overflow-y:auto"></div>
+    <label>Include URL Lists</label>
+    <div id="cc-url-lists" style="display:flex;flex-direction:column;gap:4px;padding:10px;background:#060d1a;border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:14px;max-height:130px;overflow-y:auto"><div style="color:#64748b;font-size:12px">No URL lists yet</div></div>
+    <label>Exclusion URLs (one per line)</label>
+    <textarea id="cc-excl-urls" rows="2" placeholder="allowedsite.com"></textarea>
+    <label>Exclusion URL Lists</label>
+    <div id="cc-excl-lists" style="display:flex;flex-direction:column;gap:4px;padding:10px;background:#060d1a;border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:14px;max-height:100px;overflow-y:auto"><div style="color:#64748b;font-size:12px">No URL lists yet</div></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" id="btn-cancel-cat">Cancel</button>
-      <button class="btn btn-primary" id="btn-save-cat">Save Category</button>
+      <button class="btn btn-ghost" id="btn-cancel-cc">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-cc">Save Category</button>
     </div>
   </div>
 </div>
 
-<!-- ── Entry point ─────────────────────────────────────────────────────────── -->
-<script type="module" src="js/app.js"></script>
+<!-- Investigation Panel -->
+<div id="inv-overlay"></div>
+<div id="inv-panel">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06);position:sticky;top:0;background:#0b1120;z-index:2">
+    <div style="font-size:14px;font-weight:800;color:#e2e8f0">🔍 Investigation Detail</div>
+    <button id="inv-close" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-weight:600">✕ Close</button>
+  </div>
+  <div id="inv-content" style="padding:16px 20px"></div>
+</div>
 
+<script type="module" src="js/app.js"></script>
 </body>
 </html>
