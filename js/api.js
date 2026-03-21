@@ -1,5 +1,3 @@
-// api.js — All Supabase REST API calls
-
 import { SB, ANON, ORG } from './config.js';
 import { TOK, D }        from './state.js';
 
@@ -29,6 +27,7 @@ export async function saveData() {
   try {
     const check = await sbf(`/rest/v1/policies?org_id=eq.${ORG}&select=id`);
     const rows  = check.ok ? await check.json() : [];
+    const ver   = Math.floor(Date.now() / 1000);
 
     let r;
     if (rows.length > 0) {
@@ -37,7 +36,7 @@ export async function saveData() {
         headers: { 'Prefer': 'return=minimal' },
         body: JSON.stringify({
           payload:    D,
-          version:    Math.floor(Date.now() / 1000),
+          version:    ver,
           updated_at: new Date().toISOString(),
         }),
       });
@@ -48,7 +47,7 @@ export async function saveData() {
         body: JSON.stringify({
           org_id:  ORG,
           payload: D,
-          version: Math.floor(Date.now() / 1000),
+          version: ver,
         }),
       });
     }
@@ -71,14 +70,19 @@ export async function fetchLogs(filters = {}) {
   const r = await sbf(url);
   if (!r.ok) return [];
   let logs = await r.json();
-  if (filters.search)    logs = logs.filter(l => (l.domain||'').includes(filters.search) || (l.user_email||'').includes(filters.search));
-  if (filters.userEmail) logs = logs.filter(l => (l.user_email||'').includes(filters.userEmail));
+  if (filters.search)
+    logs = logs.filter(l => (l.domain||'').includes(filters.search) ||
+                            (l.user_email||'').includes(filters.search));
+  if (filters.userEmail)
+    logs = logs.filter(l => (l.user_email||'').includes(filters.userEmail));
   return logs;
 }
 
 export async function fetchDashStats() {
   const since = Date.now() - 86400000;
-  const r = await sbf(`/rest/v1/activity_logs?org_id=eq.${ORG}&ts=gte.${since}&order=ts.desc&limit=300`);
+  const r = await sbf(
+    `/rest/v1/activity_logs?org_id=eq.${ORG}&ts=gte.${since}&order=ts.desc&limit=300`
+  );
   if (!r.ok) return [];
   return r.json();
 }
@@ -91,7 +95,9 @@ export async function fetchAuthUsers() {
 }
 
 export async function fetchUserLogMap() {
-  const r = await sbf(`/rest/v1/activity_logs?org_id=eq.${ORG}&select=user_email,ts&order=ts.desc&limit=5000`);
+  const r = await sbf(
+    `/rest/v1/activity_logs?org_id=eq.${ORG}&select=user_email,ts&order=ts.desc&limit=5000`
+  );
   if (!r.ok) return {};
   const logs = await r.json();
   const map  = {};
