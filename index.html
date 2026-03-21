@@ -116,7 +116,14 @@
     <div class="page" id="page-policies">
       <div class="page-header">
         <div><div class="page-title">Policies</div><div class="page-sub">First match wins — top to bottom through groups</div></div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <!-- Pending changes bar (hidden until changes are staged) -->
+          <div id="pending-bar" style="display:none;align-items:center;gap:8px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:7px 14px;font-size:12px;color:#fbbf24">
+            <span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block;animation:pulse 1.5s ease-in-out infinite"></span>
+            <span id="pending-count">0 pending changes</span>
+            <button id="btn-apply-changes" style="background:#f59e0b;border:none;color:#000;border-radius:7px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer">▶ Apply</button>
+            <button id="btn-discard-changes" style="background:transparent;border:1px solid rgba(245,158,11,.3);color:#f59e0b;border-radius:7px;padding:4px 10px;font-size:11px;cursor:pointer">✕ Discard</button>
+          </div>
           <button class="btn btn-ghost btn-sm" id="btn-new-group">📁 New Group</button>
           <button class="btn btn-primary btn-sm" id="btn-new-policy">+ New Policy</button>
           <button class="btn btn-success btn-sm" id="push-btn">☁ Push to Users</button>
@@ -439,6 +446,22 @@
     <button id="inv-close" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-weight:600">✕ Close</button>
   </div>
   <div id="inv-content" style="padding:16px 20px"></div>
+</div>
+
+<!-- Move to Group Modal -->
+<div class="modal-bg" id="move-to-group-modal">
+  <div class="modal modal-sm">
+    <div class="modal-title">↔ Move Policy to Group</div>
+    <div style="font-size:13px;color:#94a3b8;margin-bottom:16px">
+      Moving: <strong style="color:#e2e8f0" id="mtg-pol-name"></strong>
+    </div>
+    <label>Target Group *</label>
+    <select id="mtg-grp-select" style="margin-bottom:20px"></select>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-cancel-mtg">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-mtg">Move Policy</button>
+    </div>
+  </div>
 </div>
 
 <script type="module" src="js/app.js"></script>
