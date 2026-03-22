@@ -22,6 +22,8 @@ export async function loadData() {
   } catch (e) { console.error('[API] loadData error:', e); return null; }
 }
 
+// saveData always writes the full D object (including pendingPolicies)
+// Extension only ever reads orderedPolicies — pendingPolicies are ignored by it
 export async function saveData() {
   try {
     const check = await sbf(`/rest/v1/policies?org_id=eq.${ORG}&select=id`);
@@ -30,14 +32,14 @@ export async function saveData() {
 
     const r = rows.length > 0
       ? await sbf(`/rest/v1/policies?org_id=eq.${ORG}`, {
-          method: 'PATCH',
+          method:  'PATCH',
           headers: { 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ payload: D, version: ver, updated_at: new Date().toISOString() }),
+          body:    JSON.stringify({ payload: D, version: ver, updated_at: new Date().toISOString() }),
         })
       : await sbf('/rest/v1/policies', {
-          method: 'POST',
+          method:  'POST',
           headers: { 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ org_id: ORG, payload: D, version: ver }),
+          body:    JSON.stringify({ org_id: ORG, payload: D, version: ver }),
         });
 
     if (!r.ok) { const t = await r.text().catch(() => ''); console.error('[API] saveData failed:', r.status, t); }
@@ -52,14 +54,14 @@ export async function fetchLogs(filters = {}) {
   const r = await sbf(url);
   if (!r.ok) return [];
   let logs = await r.json();
-  if (filters.search)    logs = logs.filter(l => (l.domain||'').toLowerCase().includes(filters.search) || (l.user_email||'').toLowerCase().includes(filters.search) || (l.url||'').toLowerCase().includes(filters.search));
-  if (filters.userEmail) logs = logs.filter(l => (l.user_email||'').toLowerCase().includes(filters.userEmail));
-  if (filters.category)  logs = logs.filter(l => (l.category||'') === filters.category);
-  if (filters.today)     { const midnight = new Date(); midnight.setHours(0,0,0,0); logs = logs.filter(l => l.ts >= midnight.getTime()); }
-  if (filters.proceeded) logs = logs.filter(l => l.proceeded === true);
+  if (filters.search)         logs = logs.filter(l => (l.domain||'').toLowerCase().includes(filters.search) || (l.user_email||'').toLowerCase().includes(filters.search) || (l.url||'').toLowerCase().includes(filters.search));
+  if (filters.userEmail)      logs = logs.filter(l => (l.user_email||'').toLowerCase().includes(filters.userEmail));
+  if (filters.category)       logs = logs.filter(l => (l.category||'') === filters.category);
+  if (filters.today)          { const m = new Date(); m.setHours(0,0,0,0); logs = logs.filter(l => l.ts >= m.getTime()); }
+  if (filters.proceeded)      logs = logs.filter(l => l.proceeded === true);
   if (filters.knownMalicious) logs = logs.filter(l => l.known_malicious === true);
-  if (filters.highRisk)  logs = logs.filter(l => (l.threat_score||0) >= 55);
-  if (filters.medRisk)   logs = logs.filter(l => (l.threat_score||0) >= 30 && (l.threat_score||0) < 55);
+  if (filters.highRisk)       logs = logs.filter(l => (l.threat_score||0) >= 55);
+  if (filters.medRisk)        logs = logs.filter(l => (l.threat_score||0) >= 30 && (l.threat_score||0) < 55);
   return logs;
 }
 

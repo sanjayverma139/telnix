@@ -1,16 +1,21 @@
 // state.js — Shared mutable application state
 
 export const D = {
-  orderedPolicies:[],policyGroups:[],urlLists:[],customCategories:[],
-  policySettings:{defaultAction:'allow'},fileTypeLists:[],bypassTokens:[],
-  categoryPolicies:{},   // { social:'block', gambling:'block', ... }
-  agentConfig:{},        // { agentId, timezone, gsbApiKey, bypassMode }
+  orderedPolicies:  [],  // LIVE — extension reads these
+  pendingPolicies:  [],  // STAGING — admin panel only, extension never reads
+  policyGroups:     [],
+  urlLists:         [],
+  customCategories: [],
+  policySettings:   { defaultAction: 'allow' },
+  fileTypeLists:    [],
+  bypassTokens:     [],
+  categoryPolicies: {},
+  agentConfig:      {},
 };
 
 export let TOK = null;
 export function setTOK(t) { TOK = t; }
 
-// Modal editing state
 export let ePolId=null, eListType=null, eListId=null, eCatId=null, eCCId=null;
 export let curAct='block', curActiv='browse', curType='domain';
 
