@@ -207,12 +207,18 @@ export function renderPols() {
       // Check for any pending change on this policy
       const pendingTog  = (D.pendingPolicies||[]).find(x=>x._pendingId==='tog_'+pol.id&&x.type==='toggle_policy');
       const pendingEdit = (D.pendingPolicies||[]).find(x=>x.policyId===pol.id&&x.type==='edit_policy');
-      const hasPending  = !!(pendingTog||pendingEdit);
-      const pendingBorder = hasPending ? 'border-left:3px solid #f59e0b;' : '';
+      const pendingDel  = (D.pendingPolicies||[]).find(x=>x._pendingId==='del_pol_'+pol.id&&x.type==='delete_policy');
+      const hasPending  = !!(pendingTog||pendingEdit||pendingDel);
+      const pendingBorder = pendingDel ? 'border-left:3px solid #ef4444;' : hasPending ? 'border-left:3px solid #f59e0b;' : '';
       const displayEnabled = pendingTog ? pendingTog.newValue : pol.enabled !== false;
-      return `<tr class="pol-tr" style="${pendingBorder}${displayEnabled?'':'opacity:0.45'}">
+      return `<tr class="pol-tr" style="${pendingBorder}${pendingDel?'opacity:0.4;':''}${!pendingDel&&!displayEnabled?'opacity:0.45':''}">
         <td style="color:#475569;font-size:11px;padding-left:28px">${gi+1}.${globalIdx+1}</td>
-        <td style="font-weight:600;font-size:13px;color:#e2e8f0">${esc(pol.name)}${pol.note?`<div style="font-size:10px;color:#475569;font-weight:400">${esc(pol.note)}</div>`:''}</td>
+        <td style="font-weight:600;font-size:13px;color:#e2e8f0">
+          ${esc(pendingEdit ? pendingEdit.changes.name : pol.name)}
+          ${pendingDel  ? '<span style="font-size:9px;font-weight:800;color:#ef4444;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);border-radius:4px;padding:1px 6px;margin-left:6px">DELETE PENDING</span>' : ''}
+          ${pendingEdit && !pendingDel ? '<span style="font-size:9px;font-weight:800;color:#f59e0b;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);border-radius:4px;padding:1px 6px;margin-left:6px">EDIT PENDING</span>' : ''}
+          ${(pendingEdit?pendingEdit.changes.note:pol.note)?`<div style="font-size:10px;color:#475569;font-weight:400">${esc(pendingEdit?pendingEdit.changes.note:pol.note)}</div>`:''}
+        </td>
         <td><span style="background:${tc}18;color:${tc};padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700">${icon} ${pol.type||'domain'}</span></td>
         <td style="font-size:11px;color:#64748b;max-width:200px"><span title="${esc(cond)}" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(cond)}</span></td>
         <td><span class="badge badge-${pol.action||'block'}" style="font-size:11px">${pol.action||'block'}</span> <span style="font-size:11px;color:#475569">${actBadge}</span></td>
@@ -316,14 +322,18 @@ function openPolMenu(e, polId, grpId, idx, total) {
   const menu = document.createElement('div');
   menu.className = 'pol-dd-menu';
   menu.style.cssText = 'position:fixed;background:#0d1424;border:1px solid rgba(99,102,241,.3);border-radius:10px;min-width:190px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.7);overflow:hidden';
+  const isPendingDel = !!(D.pendingPolicies||[]).find(x=>x._pendingId==='del_pol_'+polId);
   menu.innerHTML = `
-    <div class="pol-dd-item" onclick="window._openPolModal('${polId}')">✏ Edit Policy</div>
+    <div class="pol-dd-item ${isPendingDel?'pol-dd-disabled':''}" onclick="window._openPolModal('${polId}')">✏ Edit Policy</div>
     <div class="pol-dd-sep"></div>
-    <div class="pol-dd-item ${idx<=0?'pol-dd-disabled':''}" onclick="window._polMoveUp('${polId}','${grpId}')">▲ Move Up in Group</div>
-    <div class="pol-dd-item ${idx>=total-1?'pol-dd-disabled':''}" onclick="window._polMoveDown('${polId}','${grpId}')">▼ Move Down in Group</div>
-    <div class="pol-dd-item" onclick="window._openMoveToGroup('${polId}','${grpId}')">↔ Reposition Policy…</div>
+    <div class="pol-dd-item ${idx<=0||isPendingDel?'pol-dd-disabled':''}" onclick="window._polMoveUp('${polId}','${grpId}')">▲ Move Up in Group</div>
+    <div class="pol-dd-item ${idx>=total-1||isPendingDel?'pol-dd-disabled':''}" onclick="window._polMoveDown('${polId}','${grpId}')">▼ Move Down in Group</div>
+    <div class="pol-dd-item ${isPendingDel?'pol-dd-disabled':''}" onclick="window._openMoveToGroup('${polId}','${grpId}')">↔ Reposition Policy…</div>
     <div class="pol-dd-sep"></div>
-    <div class="pol-dd-item pol-dd-danger" onclick="window._delPol('${polId}','${grpId}')">🗑 Delete Policy</div>`;
+    ${isPendingDel
+      ? `<div class="pol-dd-item" onclick="window._discardOnePending('del_pol_${polId}')">↩ Cancel Delete</div>`
+      : `<div class="pol-dd-item pol-dd-danger" onclick="window._delPol('${polId}','${grpId}')">🗑 Delete Policy</div>`
+    }`;
   document.body.appendChild(menu);
   const r = e.target.getBoundingClientRect();
   menu.style.top  = (r.bottom + 4) + 'px';
@@ -434,9 +444,11 @@ function togPol(id){
 function delPol(id){
   const pol=D.orderedPolicies.find(p=>p.id===id);if(!pol)return;
   if(!confirm(`Delete policy "${pol.name}"?`))return;
-  D.orderedPolicies=D.orderedPolicies.filter(p=>p.id!==id);
-  D.policyGroups.forEach(g=>{g.policyIds=(g.policyIds||[]).filter(i=>i!==id);});
-  stagePending({_pendingId:'del_pol_'+id,type:'delete_policy',policyId:id});renderPols();
+  // DO NOT remove from D.orderedPolicies yet — only stage
+  // Row will show DELETE PENDING badge; applied on Apply
+  const grp=(D.policyGroups||[]).find(g=>(g.policyIds||[]).includes(id));
+  stagePending({_pendingId:'del_pol_'+id, type:'delete_policy', policyId:id, originalPol:{...pol}, groupId:grp?.id});
+  renderPols();
 }
 function polMoveUp(polId,grpId){
   const grp=D.policyGroups.find(g=>g.id===grpId);if(!grp)return;
@@ -567,9 +579,8 @@ export function savePol(){
     closeModal('pol-modal');renderPols();
   } else if(isEditLive){
     const oldGrp=D.policyGroups.find(g=>(g.policyIds||[]).includes(ePolId));
-    const idx=D.orderedPolicies.findIndex(p=>p.id===ePolId);
-    if(idx>=0)D.orderedPolicies[idx]={...D.orderedPolicies[idx],...polData};
-    stagePending({_pendingId:'edit_pol_'+ePolId,type:'edit_policy',policyId:ePolId,changes:polData,oldGroupId:oldGrp?.id});
+    // DO NOT modify D.orderedPolicies — only stage, extension sees old version until Apply
+    stagePending({_pendingId:'edit_pol_'+ePolId, type:'edit_policy', policyId:ePolId, changes:polData, oldGroupId:oldGrp?.id});
     closeModal('pol-modal');renderPols();
   } else {
     _savedPolData=polData;closeModal('pol-modal');openPlaceModal(polData.name);
