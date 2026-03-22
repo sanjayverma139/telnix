@@ -17,7 +17,7 @@ let pendingChanges = [];
 function updatePendingBar() {
   const bar   = $('pending-bar');
   const count = $('pending-count');
-  // Use D.pendingPolicies as the source of truth — survives page refresh
+  // D.pendingPolicies is the source of truth — survives page refresh
   const n = (D.pendingPolicies || []).length;
   if (!bar) return;
   bar.style.display = n > 0 ? 'flex' : 'none';
@@ -99,17 +99,26 @@ async function applyAllPending() {
   if(btn){btn.disabled=false;btn.textContent='▶ Apply';}
 }
 
-async function discardAllPending() {
-  if(!confirm('Discard all pending changes?'))return;
-  for(const c of pendingChanges){if(c.discardFn)await c.discardFn();}
-  pendingChanges=[]; D.pendingPolicies=[];
+function discardAllPending() {
+  // Use styled modal instead of browser confirm()
+  openModal('discard-confirm-modal');
+}
+
+async function doDiscardAllPending() {
+  closeModal('discard-confirm-modal');
+  pendingChanges = [];
+  D.pendingPolicies = [];
+  // Save immediately to clear pending from Supabase
+  await saveData();
   updatePendingBar();
-  const payload=await loadData();
-  if(payload){
-    D.orderedPolicies=payload.orderedPolicies||[];
-    D.policyGroups=payload.policyGroups||[];
-    D.pendingPolicies=payload.pendingPolicies||[];
+  // Reload live data fresh from Supabase
+  const payload = await loadData();
+  if (payload) {
+    D.orderedPolicies  = payload.orderedPolicies  || [];
+    D.policyGroups     = payload.policyGroups     || [];
+    D.pendingPolicies  = [];
   }
+  showAlert('pol-al', 'success', 'All pending changes discarded.');
   renderPols();
 }
 
@@ -593,6 +602,8 @@ export function initPolicies(){
   $('push-btn')?.addEventListener('click',pushAll);
   $('btn-apply-changes')?.addEventListener('click',applyAllPending);
   $('btn-discard-changes')?.addEventListener('click',discardAllPending);
+  $('btn-discard-confirm')?.addEventListener('click',doDiscardAllPending);
+  $('btn-discard-cancel')?.addEventListener('click',()=>closeModal('discard-confirm-modal'));
   $('btn-save-grp')?.addEventListener('click',saveGrp);
   $('btn-cancel-grp')?.addEventListener('click',()=>closeModal('grp-modal'));
   $('btn-save-pol')?.addEventListener('click',savePol);

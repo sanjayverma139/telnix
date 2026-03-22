@@ -8,7 +8,6 @@ import { D }        from './state.js';
 import { showPage } from './nav.js';
 import { loadDash } from './dashboard.js';
 
-
 export function initAuth() {
   $('l-btn').addEventListener('click', doLogin);
   $('l-email').addEventListener('keydown', e => { if (e.key === 'Enter') $('l-pass').focus(); });
@@ -60,7 +59,10 @@ async function doLogin() {
 
     showPage('dashboard');
     loadDash();
-    import('./policies.js').then(m => m.renderPols());
+    // Restore pending bar if pending policies exist from previous session
+    if ((D.pendingPolicies||[]).length > 0) {
+      import('./policies.js').then(m => m.renderPols());
+    }
   } catch {
     err.textContent = 'Connection error.';
     err.style.display = 'block';
