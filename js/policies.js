@@ -643,8 +643,16 @@ async function buildSourceDropdowns(selectedUsers=[], selectedGroups=[]) {
       userEmails = [...new Set(rows.map(l=>l.user_email).filter(Boolean))].sort();
     }
     const userItems  = userEmails.map(e => ({ id:e, name:e }));
-    const { getGroups } = await import('./usergroups.js');
-    const groupItems = getGroups().map(g => ({ id:g.id, name:g.name }));
+    let groupItems = [];
+    try {
+      const { sbf } = await import('./api.js');
+      const { ORG } = await import('./config.js');
+      const gr = await sbf(`/rest/v1/user_groups?org_id=eq.${ORG}&order=name.asc`);
+      if (gr.ok) {
+        const groups = await gr.json();
+        groupItems = groups.map(g => ({ id: g.id, name: g.name }));
+      }
+    } catch(e) { console.warn('[Source] groups fetch failed:', e); }
 
     _ddSourceUsers  = buildChipDropdown('pm-source-users-wrap',  userItems,  selectedUsers,  { placeholder:'Search or type email...' });
     _ddSourceGroups = buildChipDropdown('pm-source-groups-wrap', groupItems, selectedGroups, { placeholder:'Search groups...' });
