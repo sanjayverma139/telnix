@@ -110,15 +110,9 @@ export function testUrl() {
       }
 
       // ── Disabled check ───────────────────────────────────────────────────────
-      if (pol.enabled === false) {
-        results.push({ pol, grp, rank: polIdx, hit: false, disabled: true, sourceSkip: false, sourceNote: '' });
-        continue;
-      }
+      if (pol.enabled === false) continue;
 
-      if (sourceSkip) {
-        results.push({ pol, grp, rank: polIdx, hit: false, disabled: false, sourceSkip: true, sourceNote });
-        continue;
-      }
+      if (sourceSkip) continue;
 
       // ── Domain match check ───────────────────────────────────────────────────
       let hit = false;
