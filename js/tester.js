@@ -16,7 +16,37 @@ export function populateTesterGroups() {
   sel.value = current;
 }
 
-// ── Main test function ────────────────────────────────────────────────────────
+// ── Condition summary helper ──────────────────────────────────────────────────
+function getConditionSummary(pol) {
+  if (pol.type === 'domain') {
+    const doms = (pol.conditions?.domains||[]);
+    return doms.length ? `Domains: ${doms.slice(0,3).map(d=>`<span style="background:rgba(99,102,241,.1);color:#a5b4fc;padding:1px 5px;border-radius:3px;font-size:10px">${esc(d)}</span>`).join(' ')+(doms.length>3?` <span style="color:#475569">+${doms.length-3} more</span>`:'')  }` : '';
+  }
+  if (pol.type === 'category') {
+    const cats = (pol.conditions?.categories||[]);
+    return cats.length ? `Categories: ${cats.map(c=>`<span style="background:rgba(52,211,153,.08);color:#34d399;padding:1px 5px;border-radius:3px;font-size:10px">${esc(c)}</span>`).join(' ')}` : '';
+  }
+  if (pol.type === 'list') {
+    const lists = (pol.conditions?.listIds||[]).map(lid => {
+      const l = (D.urlLists||[]).find(x => x.id === lid);
+      return l ? `<span style="background:rgba(96,165,250,.08);color:#60a5fa;padding:1px 5px;border-radius:3px;font-size:10px">${esc(l.name)} (${(l.domains||[]).length} domains)</span>` : '';
+    }).filter(Boolean);
+    return lists.length ? `URL Lists: ${lists.join(' ')}` : '';
+  }
+  if (pol.type === 'combo') {
+    const parts = [];
+    const doms = (pol.conditions?.domains||[]);
+    if (doms.length) parts.push(`Domains: ${doms.slice(0,2).map(d=>`<span style="background:rgba(99,102,241,.1);color:#a5b4fc;padding:1px 5px;border-radius:3px;font-size:10px">${esc(d)}</span>`).join(' ')}`);
+    const cats = (pol.conditions?.categories||[]);
+    if (cats.length) parts.push(`Categories: ${cats.map(c=>`<span style="background:rgba(52,211,153,.08);color:#34d399;padding:1px 5px;border-radius:3px;font-size:10px">${esc(c)}</span>`).join(' ')}`);
+    const lists2 = (pol.conditions?.listIds||[]).map(lid=>{const l=(D.urlLists||[]).find(x=>x.id===lid);return l?`<span style="background:rgba(96,165,250,.08);color:#60a5fa;padding:1px 5px;border-radius:3px;font-size:10px">${esc(l.name)}</span>`:''}).filter(Boolean);
+    if (lists2.length) parts.push(`Lists: ${lists2.join(' ')}`);
+    return parts.join(' · ');
+  }
+  return '';
+}
+
+
 export function testUrl() {
   const input     = $('tu-url')?.value.trim();
   const userInput = ($('tu-user')?.value || '').trim().toLowerCase();
@@ -214,19 +244,14 @@ export function testUrl() {
       const isFirst = firstMatch && r.pol.id === firstMatch.pol.id;
 
       let borderColor = 'rgba(255,255,255,.06)';
-      let opacity = '1';
-      if (isFirst)        borderColor = ac + '55';
-      if (r.disabled)     opacity = '0.4';
-      if (r.sourceSkip)   opacity = '0.5';
+      if (isFirst) borderColor = ac + '55';
 
       let statusBadge = '';
-      if (isFirst)      statusBadge = '<span style="font-size:9px;font-weight:700;color:#10b981;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:4px;padding:2px 6px">HITS FIRST</span>';
-      else if (r.disabled)   statusBadge = '<span style="font-size:9px;font-weight:700;color:#64748b;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:2px 6px">DISABLED</span>';
-      else if (r.sourceSkip) statusBadge = '<span style="font-size:9px;font-weight:700;color:#f59e0b;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:4px;padding:2px 6px">DIFFERENT USER/GROUP</span>';
+      if (isFirst)            statusBadge = '<span style="font-size:9px;font-weight:700;color:#10b981;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:4px;padding:2px 6px">HITS FIRST</span>';
       else if (r.hit && !isFirst) statusBadge = '<span style="font-size:9px;font-weight:700;color:#6366f1;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:4px;padding:2px 6px">ALSO MATCHES</span>';
-      else if (!r.hit)       statusBadge = '<span style="font-size:9px;font-weight:700;color:#475569;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:4px;padding:2px 6px">NO MATCH</span>';
+      else if (!r.hit)        statusBadge = '<span style="font-size:9px;font-weight:700;color:#475569;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:4px;padding:2px 6px">NO MATCH</span>';
 
-      return `<div style="background:#0d1424;border:1px solid ${borderColor};border-radius:8px;padding:10px 14px;margin-bottom:6px;opacity:${opacity}">
+      return `<div style="background:#0d1424;border:1px solid ${borderColor};border-radius:8px;padding:10px 14px;margin-bottom:6px">
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:11px;font-weight:700;color:#475569;width:22px;flex-shrink:0">#${r.rank}</span>
           <div style="flex:1;min-width:0">
@@ -235,6 +260,7 @@ export function testUrl() {
               ${r.pol.source?.users?.length||r.pol.source?.groups?.length
                 ? `<span style="color:#f59e0b"> · 👤 source-filtered</span>` : ''}
             </div>
+            <div style="font-size:11px;color:#475569;margin-top:3px">${getConditionSummary(r.pol)}</div>
             ${r.hit && r.matchReason ? `<div style="font-size:11px;color:#4ade80;margin-top:2px">✓ ${esc(r.matchReason)}</div>` : ''}
             ${r.sourceSkip && r.sourceNote ? `<div style="font-size:11px;color:#f59e0b;margin-top:2px">⚠ ${esc(r.sourceNote)}</div>` : ''}
           </div>
