@@ -89,7 +89,11 @@ async function applyAllPending() {
         else if (item.type==='move_group')    { const idx=D.policyGroups.findIndex(g=>g.id===item.groupId);const to=item.direction==='up'?idx-1:idx+1;if(idx>=0&&to>=0&&to<D.policyGroups.length)[D.policyGroups[idx],D.policyGroups[to]]=[D.policyGroups[to],D.policyGroups[idx]]; }
         else if (item.type==='move_policy')   { const grp=D.policyGroups.find(g=>g.id===item.groupId);if(grp){const idx=grp.policyIds.indexOf(item.policyId);const to=item.direction==='up'?idx-1:idx+1;if(idx>=0&&to>=0&&to<grp.policyIds.length)[grp.policyIds[idx],grp.policyIds[to]]=[grp.policyIds[to],grp.policyIds[idx]];} }
         else if (item.type==='move_policy_to_group') { const fg=D.policyGroups.find(g=>g.id===item.fromGroupId);const tg=D.policyGroups.find(g=>g.id===item.toGroupId);if(fg)fg.policyIds=fg.policyIds.filter(id=>id!==item.policyId);if(tg&&!tg.policyIds.includes(item.policyId))tg.policyIds.push(item.policyId); }
-        else if (item.type==='toggle_policy') { const p=D.orderedPolicies.find(p=>p.id===item.policyId);if(p)p.enabled=item.newValue; }
+        else if (item.type==='toggle_policy') {
+          // Apply the toggled value to the live policy
+          const p=D.orderedPolicies.find(p=>p.id===item.policyId);
+          if(p) p.enabled=item.newValue;
+        }
     }
     D.pendingPolicies=[]; pendingChanges=[];
     D.policySettings=D.policySettings||{};
@@ -106,7 +110,7 @@ function discardAllPending() { openModal('discard-confirm-modal'); }
 async function doDiscardAllPending() {
   closeModal('discard-confirm-modal');
   for (const item of (D.pendingPolicies||[])) {
-    if (item.type==='toggle_policy') { const p=D.orderedPolicies.find(p=>p.id===item.policyId);if(p)p.enabled=item.oldValue; }
+    if (item.type==='toggle_policy') { /* toggle was never applied to D.orderedPolicies — just removing from pending is enough */ }
     else if (item.type==='rename_group') { const g=D.policyGroups.find(g=>g.id===item.groupId);if(g)g.name=item.oldName; }
     else if (item.type==='move_group') { const idx=D.policyGroups.findIndex(g=>g.id===item.groupId);const to=item.direction==='up'?idx+1:idx-1;if(idx>=0&&to>=0&&to<D.policyGroups.length)[D.policyGroups[idx],D.policyGroups[to]]=[D.policyGroups[to],D.policyGroups[idx]]; }
     else if (item.type==='move_policy') { const grp=D.policyGroups.find(g=>g.id===item.groupId);if(grp){const idx=grp.policyIds.indexOf(item.policyId);const to=item.direction==='up'?idx+1:idx-1;if(idx>=0&&to>=0&&to<grp.policyIds.length)[grp.policyIds[idx],grp.policyIds[to]]=[grp.policyIds[to],grp.policyIds[idx]];} }
@@ -200,7 +204,13 @@ export function renderPols() {
       const cond=buildCondSummary(pol);
       const schedBadge=pol.schedule?`<span style="font-size:10px;color:#a5b4fc">⏰ Sched</span>`:'<span style="color:#374151">—</span>';
       const actBadge=pol.activity==='download'?'📥':pol.activity==='all'?'🔒':'🌐';
-      return `<tr class="pol-tr" style="${pol.enabled===false?'opacity:0.45':''}">
+      // Check for any pending change on this policy
+      const pendingTog  = (D.pendingPolicies||[]).find(x=>x._pendingId==='tog_'+pol.id&&x.type==='toggle_policy');
+      const pendingEdit = (D.pendingPolicies||[]).find(x=>x.policyId===pol.id&&x.type==='edit_policy');
+      const hasPending  = !!(pendingTog||pendingEdit);
+      const pendingBorder = hasPending ? 'border-left:3px solid #f59e0b;' : '';
+      const displayEnabled = pendingTog ? pendingTog.newValue : pol.enabled !== false;
+      return `<tr class="pol-tr" style="${pendingBorder}${displayEnabled?'':'opacity:0.45'}">
         <td style="color:#475569;font-size:11px;padding-left:28px">${gi+1}.${globalIdx+1}</td>
         <td style="font-weight:600;font-size:13px;color:#e2e8f0">${esc(pol.name)}${pol.note?`<div style="font-size:10px;color:#475569;font-weight:400">${esc(pol.note)}</div>`:''}</td>
         <td><span style="background:${tc}18;color:${tc};padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700">${icon} ${pol.type||'domain'}</span></td>
@@ -209,7 +219,7 @@ export function renderPols() {
         <td style="text-align:center">${schedBadge}</td>
         <td style="text-align:center;color:#64748b;font-size:12px">—</td>
         <td style="text-align:center">
-          <button class="toggle ${pol.enabled!==false?'on':''}" style="width:34px;height:20px" onclick="window._togPol('${pol.id}','${g.id}')"></button>
+          <button class="toggle ${pendingTog ? (pendingTog.newValue?'on':'') : (pol.enabled!==false?'on':'')}" style="width:34px;height:20px" onclick="window._togPol('${pol.id}','${g.id}')"></button>
         </td>
         <td style="text-align:right;position:relative">
           <button class="pol-menu-btn" onclick="window._openPolMenu(event,'${pol.id}','${g.id}',${globalIdx},${ps.length})">⋯</button>
@@ -407,9 +417,18 @@ function moveGrp(id,dir){
 // ── Policy CRUD ───────────────────────────────────────────────────────────────
 function togPol(id){
   const p=D.orderedPolicies.find(p=>p.id===id);if(!p)return;
-  const oldValue=p.enabled!==false;
-  p.enabled=!oldValue;
-  stagePending({_pendingId:'tog_'+id,type:'toggle_policy',policyId:id,newValue:p.enabled,oldValue});
+  const oldValue = p.enabled !== false;
+  // Check if there's already a pending toggle for this policy
+  const existing = (D.pendingPolicies||[]).find(x=>x._pendingId==='tog_'+id);
+  if (existing) {
+    // Toggle is being reversed — cancel the pending toggle instead
+    D.pendingPolicies = (D.pendingPolicies||[]).filter(x=>x._pendingId!=='tog_'+id);
+    saveData(); updatePendingBar(); renderPols();
+    return;
+  }
+  // New toggle — stage it but DO NOT modify D.orderedPolicies
+  // The render function will show the pending state visually
+  stagePending({_pendingId:'tog_'+id, type:'toggle_policy', policyId:id, newValue:!oldValue, oldValue});
   renderPols();
 }
 function delPol(id){
