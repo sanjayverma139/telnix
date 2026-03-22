@@ -4,6 +4,27 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Telnix Admin Panel</title>
 <link rel="stylesheet" href="css/styles.css">
+<style>
+.pol-tr td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+.pol-tr:last-child td{border-bottom:none}
+.pol-tr:hover td{background:rgba(255,255,255,.02)}
+.pol-menu-btn{background:transparent;border:1px solid rgba(255,255,255,.08);color:#64748b;border-radius:6px;padding:3px 10px;font-size:16px;cursor:pointer;line-height:1;transition:.1s}
+.pol-menu-btn:hover{border-color:rgba(99,102,241,.4);color:#a5b4fc}
+.pol-dd-menu{animation:fadeIn .1s ease}
+.pol-dd-item{padding:9px 16px;font-size:12px;color:#cbd5e1;cursor:pointer;transition:background .1s;display:flex;align-items:center;gap:8px}
+.pol-dd-item:hover{background:rgba(99,102,241,.15);color:#e2e8f0}
+.pol-dd-item.pol-dd-disabled{opacity:.35;pointer-events:none}
+.pol-dd-item.pol-dd-danger{color:#f87171}
+.pol-dd-item.pol-dd-danger:hover{background:rgba(239,68,68,.12)}
+.pol-dd-sep{height:1px;background:rgba(255,255,255,.06);margin:4px 0}
+.stat-chip{padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap}
+.stat-chip-click:hover{opacity:.8}
+.stat-chip-active{outline:2px solid rgba(99,102,241,.5)}
+.pol-group-wrap table{background:#0a1120;border-radius:10px;border:1px solid rgba(255,255,255,.06);overflow:hidden;margin-bottom:8px}
+.place-opt{transition:border-color .15s,background .15s;border-radius:10px}
+.place-opt.sel{border-color:rgba(99,102,241,.5)!important;background:rgba(99,102,241,.08)!important}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+</style>
 </head>
 <body>
 
@@ -115,9 +136,11 @@
     <!-- Policies -->
     <div class="page" id="page-policies">
       <div class="page-header">
-        <div><div class="page-title">Policies</div><div class="page-sub">First match wins — top to bottom through groups</div></div>
+        <div>
+          <div class="page-title">Policies</div>
+          <div class="page-sub">Evaluated top-to-bottom through groups, then policies within each group. First match wins.</div>
+        </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <!-- Pending changes bar (hidden until changes are staged) -->
           <div id="pending-bar" style="display:none;align-items:center;gap:8px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:7px 14px;font-size:12px;color:#fbbf24">
             <span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block;animation:pulse 1.5s ease-in-out infinite"></span>
             <span id="pending-count">0 pending changes</span>
@@ -126,14 +149,29 @@
           </div>
           <button class="btn btn-ghost btn-sm" id="btn-new-group">📁 New Group</button>
           <button class="btn btn-primary btn-sm" id="btn-new-policy">+ New Policy</button>
+          <select id="def-action" title="Default Action" style="width:auto;margin:0;padding:6px 12px;border-color:rgba(99,102,241,.3)"><option value="allow">✅ ALLOW</option><option value="warn">⚠️ WARN</option><option value="block">🚫 BLOCK</option></select>
           <button class="btn btn-success btn-sm" id="push-btn">☁ Push to Users</button>
         </div>
       </div>
       <div class="alert" id="pol-al"></div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-        <span style="font-size:12px;color:#64748b">Default Action:</span>
-        <select id="def-action" style="width:auto;margin:0;padding:6px 12px"><option value="allow">Allow</option><option value="warn">Warn</option><option value="block">Block</option></select>
+
+      <!-- Stat chips -->
+      <div id="pol-stat-chips" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
+
+      <!-- Search + filter row -->
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;background:#060d1a;border:1px solid rgba(99,102,241,.3);border-radius:8px;padding:7px 12px;flex:1">
+          <span style="color:#64748b;font-size:14px;flex-shrink:0">🔍</span>
+          <input type="text" id="pol-search" placeholder="Search policy name..." style="background:transparent;border:none;outline:none;color:#e2e8f0;font-size:13px;width:100%;margin:0">
+        </div>
+        <button id="btn-pol-filter" class="btn btn-ghost btn-sm" style="white-space:nowrap">＋ ADD FILTER</button>
+        <button id="btn-pol-clear-filter" class="btn btn-sm" style="background:transparent;border:1px solid rgba(255,255,255,.08);color:#64748b;white-space:nowrap">✕ Clear</button>
+        <span id="pol-match-count" style="display:none;font-size:12px;color:#a5b4fc;white-space:nowrap"></span>
       </div>
+
+      <!-- Active filter chips -->
+      <div id="pol-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;min-height:0"></div>
+
       <div id="pol-con"><div class="loading">Loading...</div></div>
     </div>
 
