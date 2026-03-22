@@ -106,19 +106,66 @@ function discardAllPending() {
 
 async function doDiscardAllPending() {
   closeModal('discard-confirm-modal');
-  pendingChanges = [];
+
+  // Reverse every immediately-applied change before clearing
+  for (const item of (D.pendingPolicies || [])) {
+    if (item.type === 'toggle_policy') {
+      // Reverse the toggle — restore previous enabled state
+      const p = D.orderedPolicies.find(p => p.id === item.policyId);
+      if (p) p.enabled = !item.newValue;
+
+    } else if (item.type === 'rename_group') {
+      const g = D.policyGroups.find(g => g.id === item.groupId);
+      if (g) g.name = item.oldName;
+
+    } else if (item.type === 'delete_group') {
+      // Groups were removed — can't easily reverse without full reload
+      // Will be fixed by Supabase reload below
+
+    } else if (item.type === 'move_group') {
+      const idx = D.policyGroups.findIndex(g => g.id === item.groupId);
+      const to  = item.direction === 'up' ? idx - 1 : idx + 1;
+      if (idx >= 0 && to >= 0 && to < D.policyGroups.length)
+        [D.policyGroups[idx], D.policyGroups[to]] = [D.policyGroups[to], D.policyGroups[idx]];
+
+    } else if (item.type === 'move_policy') {
+      const grp = D.policyGroups.find(g => g.id === item.groupId);
+      if (grp) {
+        const idx = grp.policyIds.indexOf(item.policyId);
+        const to  = item.direction === 'up' ? idx + 1 : idx - 1; // reverse direction
+        if (idx >= 0 && to >= 0 && to < grp.policyIds.length)
+          [grp.policyIds[idx], grp.policyIds[to]] = [grp.policyIds[to], grp.policyIds[idx]];
+      }
+
+    } else if (item.type === 'move_policy_to_group') {
+      const fromGrp = D.policyGroups.find(g => g.id === item.toGroupId);   // reverse from/to
+      const toGrp   = D.policyGroups.find(g => g.id === item.fromGroupId);
+      if (fromGrp) fromGrp.policyIds = fromGrp.policyIds.filter(id => id !== item.policyId);
+      if (toGrp && !toGrp.policyIds.includes(item.policyId)) toGrp.policyIds.push(item.policyId);
+
+    } else if (item.type === 'delete_policy') {
+      // Policy was removed from D — reload from Supabase will restore it
+    }
+    // create_policy items were never added to D.orderedPolicies so nothing to reverse
+    // edit_policy items were applied to D.orderedPolicies — reload from Supabase fixes
+  }
+
+  pendingChanges    = [];
   D.pendingPolicies = [];
-  // Save immediately to clear pending from Supabase
+
+  // Save the reversed state back to Supabase
   await saveData();
   updatePendingBar();
-  // Reload live data fresh from Supabase
+
+  // For complex reversals (delete, edit), reload from Supabase to be safe
   const payload = await loadData();
   if (payload) {
-    D.orderedPolicies  = payload.orderedPolicies  || [];
-    D.policyGroups     = payload.policyGroups     || [];
-    D.pendingPolicies  = [];
+    D.orderedPolicies = payload.orderedPolicies || [];
+    D.policyGroups    = payload.policyGroups    || [];
+    D.pendingPolicies = [];
   }
-  showAlert('pol-al', 'success', 'All pending changes discarded.');
+
+  showAlert('pol-al', 'success', 'All pending changes discarded — policies restored to previous state.');
   renderPols();
 }
 
@@ -371,9 +418,11 @@ function moveGrp(id,dir){
 // ── Policy CRUD ───────────────────────────────────────────────────────────────
 function togPol(id){
   const p=D.orderedPolicies.find(p=>p.id===id);if(!p)return;
-  p.enabled=p.enabled===false;
-  addPending('tog_'+id,`${p.enabled?'Enable':'Disable'} "${p.name}"`,()=>Promise.resolve(),()=>{p.enabled=!p.enabled;renderPols();return Promise.resolve();});
-  stagePending({_pendingId:'tog_'+id,type:'toggle_policy',policyId:id,newValue:p.enabled});renderPols();
+  const oldValue = p.enabled !== false; // capture BEFORE toggling
+  p.enabled = !oldValue;
+  addPending('tog_'+id,`${p.enabled?'Enable':'Disable'} "${p.name}"`,()=>Promise.resolve(),()=>{p.enabled=oldValue;renderPols();return Promise.resolve();});
+  stagePending({_pendingId:'tog_'+id,type:'toggle_policy',policyId:id,newValue:p.enabled,oldValue});
+  renderPols();
 }
 function delPol(id){
   const pol=D.orderedPolicies.find(p=>p.id===id);if(!pol)return;
