@@ -529,10 +529,11 @@ export function openPolModal(id=null,pendingItem=null){
   _ddCat=buildChipDropdown('pm-cat-wrap',catItems,[],{placeholder:'Search categories...',hasFilter:true});
   _ddList=buildChipDropdown('pm-list-wrap',listItems,[],{placeholder:'Search URL lists...'});
   _ddComboList=buildChipDropdown('pm-combo-list-wrap',listItems,[],{placeholder:'Search URL lists...'});
+  
+  const pol=isPending?pendingItem.policyData:(isEdit?D.orderedPolicies.find(p=>p.id===id):null);
   // Source dropdowns — built asynchronously after modal opens
   _ddSourceUsers=null; _ddSourceGroups=null;
   buildSourceDropdowns(pol?.source?.users||[], pol?.source?.groups||[]);
-  const pol=isPending?pendingItem.policyData:(isEdit?D.orderedPolicies.find(p=>p.id===id):null);
   if(pol){
     $('pm-name').value=pol.name||'';$('pm-note').value=pol.note||'';
     if(pol.enabled===false)$('pm-en').className='toggle';
