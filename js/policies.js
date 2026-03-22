@@ -409,7 +409,7 @@ export function openPolModal(id=null, pendingItem=null) {
   }
 
   // Store reference to pending item being edited
-  $('pm-save').dataset.editingPendingId = pendingItem?._pendingId || '';
+  $('btn-save-pol').dataset.editingPendingId = pendingItem?._pendingId || '';
   openModal('pol-modal');
 }
 
@@ -468,7 +468,7 @@ export function savePol() {
     schedule,
   };
 
-  const editingPendingId = $('pm-save')?.dataset.editingPendingId || '';
+  const editingPendingId = $('btn-save-pol')?.dataset.editingPendingId || '';
   const isEditLive = !!ePolId;
 
   if (editingPendingId) {
