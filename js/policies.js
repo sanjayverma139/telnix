@@ -15,7 +15,10 @@ const TC = {
 let pendingChanges = [];
 
 function updatePendingBar() {
-  const bar = $('pending-bar'), count = $('pending-count'), n = pendingChanges.length;
+  const bar   = $('pending-bar');
+  const count = $('pending-count');
+  // Use D.pendingPolicies as the source of truth — survives page refresh
+  const n = (D.pendingPolicies || []).length;
   if (!bar) return;
   bar.style.display = n > 0 ? 'flex' : 'none';
   if (count) count.textContent = n + ' pending change' + (n > 1 ? 's' : '');
