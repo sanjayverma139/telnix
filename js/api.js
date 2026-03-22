@@ -1,6 +1,6 @@
 // api.js — All Supabase REST API calls
 
-import { SB, ANON, ORG } from './config.js';
+import { SB, ANON, ORG, SVC } from './config.js';
 import { TOK, D }        from './state.js';
 
 export async function sbf(path, opts = {}) {
@@ -73,14 +73,18 @@ export async function fetchDashStats() {
 }
 
 export async function fetchAuthUsers() {
-  const r = await sbf('/auth/v1/admin/users?per_page=100');
+  const r = await fetch(SB + '/auth/v1/admin/users?per_page=100', {
+    headers: { 'apikey': SVC, 'Authorization': `Bearer ${SVC}` }
+  });
   if (!r.ok) return null;
   const d = await r.json();
   return d.users || [];
 }
 
 export async function fetchUserLogMap() {
-  const r = await sbf(`/rest/v1/activity_logs?org_id=eq.${ORG}&select=user_email,ts&order=ts.desc&limit=5000`);
+  const r = await fetch(SB + `/rest/v1/activity_logs?org_id=eq.${ORG}&select=user_email,ts&order=ts.desc&limit=5000`, {
+    headers: { 'apikey': SVC, 'Authorization': `Bearer ${SVC}`, 'Content-Type': 'application/json' }
+  });
   if (!r.ok) return {};
   const logs = await r.json();
   const map = {};

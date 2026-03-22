@@ -1,81 +1,187 @@
-// tester.js — Enhanced URL Tester showing matching policies, URL lists, categories, threat score
+// tester.js — Enhanced URL Tester with user/group filter
 
-import { CAT_MAP, THREAT_CATEGORIES } from './config.js';
-import { D }                           from './state.js';
-import { $, esc }                      from './utils.js';
+import { CAT_MAP } from './config.js';
+import { D }       from './state.js';
+import { $, esc }  from './utils.js';
 
+// ── Populate group dropdown ───────────────────────────────────────────────────
+export function populateTesterGroups() {
+  const sel = $('tu-group');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— All groups (no filter) —</option>'
+    + (D.policyGroups||[]).map(g =>
+        `<option value="${g.id}">${esc(g.name)}</option>`
+      ).join('');
+  sel.value = current;
+}
+
+// ── Main test function ────────────────────────────────────────────────────────
 export function testUrl() {
-  const input = $('tu-url')?.value.trim();
+  const input     = $('tu-url')?.value.trim();
+  const userInput = ($('tu-user')?.value || '').trim().toLowerCase();
+  const groupId   = $('tu-group')?.value || '';
+
   if (!input) return;
 
   let domain = '';
-  try { domain = new URL(input.startsWith('http') ? input : 'https://' + input).hostname.replace(/^www\./, ''); }
-  catch { domain = input.replace(/^www\./, ''); }
+  try {
+    domain = new URL(input.startsWith('http') ? input : 'https://' + input)
+      .hostname.replace(/^www\./, '');
+  } catch { domain = input.replace(/^www\./, ''); }
 
-  const res = $('tu-res'); if (!res) return;
+  const res = $('tu-res');
+  if (!res) return;
   res.innerHTML = '<div style="color:#64748b;font-size:12px;padding:10px 0">Analysing...</div>';
 
-  // ── Auto-categorise ─────────────────────────────────────────────────────────
+  // ── Auto-categorise ──────────────────────────────────────────────────────────
   let autoCat = 'unknown';
   for (const [cat, doms] of Object.entries(CAT_MAP)) {
     if (doms.some(d => domain === d || domain.endsWith('.' + d))) { autoCat = cat; break; }
   }
-  for (const cc of (D.customCategories||[])) {
-    if ((cc.domains||[]).some(d => domain === d || domain.endsWith('.' + d))) { autoCat = cc.name; break; }
+  for (const cc of (D.customCategories || [])) {
+    if ((cc.domains||[]).some(d => domain === d || domain.endsWith('.' + d))) {
+      autoCat = cc.name; break;
+    }
   }
 
-  // ── Find matching URL lists ──────────────────────────────────────────────────
+  // ── Find matching URL lists ───────────────────────────────────────────────────
   const matchedLists = (D.urlLists||[]).filter(l =>
     (l.domains||[]).some(d => domain === d || domain.endsWith('.' + d))
   );
 
-  // ── Find ALL matching policies (not just first) ──────────────────────────────
-  const matchedPolicies = [];
-  let firstMatch = null;
-  let polIdx = 0;
-
-  for (const grp of (D.policyGroups||[])) {
-    for (const pid of (grp.policyIds||[])) {
-      const pol = (D.orderedPolicies||[]).find(p => p.id === pid);
-      if (!pol || pol.enabled === false || pol.activity === 'download') continue;
-      polIdx++;
-
-      let hit = false;
-      if (pol.type === 'domain') {
-        hit = (pol.conditions?.domains||[]).some(d => domain === d || domain.endsWith('.' + d));
-      } else if (pol.type === 'category') {
-        hit = (pol.conditions?.categories||[]).includes(autoCat);
-      } else if (pol.type === 'list') {
-        const listDoms = (pol.conditions?.listIds||[]).flatMap(lid => {
-          const l = (D.urlLists||[]).find(x => x.id === lid);
-          return l?.domains || [];
-        });
-        hit = listDoms.some(d => domain === d || domain.endsWith('.' + d));
-      } else if (pol.type === 'combo') {
-        const domHit = (pol.conditions?.domains||[]).some(d => domain === d || domain.endsWith('.' + d));
-        const catHit = (pol.conditions?.categories||[]).includes(autoCat);
-        const listDoms = (pol.conditions?.listIds||[]).flatMap(lid => {
-          const l = (D.urlLists||[]).find(x => x.id === lid);
-          return l?.domains || [];
-        });
-        const listHit = listDoms.some(d => domain === d || domain.endsWith('.' + d));
-        hit = domHit || catHit || listHit;
+  // ── Resolve which user groups the entered user belongs to ────────────────────
+  // User groups are stored in D.userGroups (if available) or inferred from policies
+  // We check by looking at which group IDs appear in policy source.users matching the email
+  const userGroupIds = new Set();
+  if (userInput) {
+    for (const pol of (D.orderedPolicies||[])) {
+      if ((pol.source?.users||[]).some(u => u.toLowerCase() === userInput)) {
+        (pol.source?.groups||[]).forEach(gid => userGroupIds.add(gid));
       }
-
-      if (hit) {
-        if (!firstMatch) firstMatch = { pol, grp, rank: polIdx };
-        matchedPolicies.push({ pol, grp, rank: polIdx, isFirst: !firstMatch || firstMatch.pol.id === pol.id });
+    }
+    // Also check D.userGroups if it exists
+    for (const ug of (D.userGroups||[])) {
+      if ((ug.members||[]).some(m => m.toLowerCase() === userInput)) {
+        userGroupIds.add(ug.id);
       }
     }
   }
 
+  // ── Evaluate policies ─────────────────────────────────────────────────────────
+  // Filter logic:
+  //   - If user entered: only show policies that have NO source filter (global)
+  //     OR whose source.users includes this user
+  //     OR whose source.groups overlap with this user's groups
+  //   - If group selected: only show policies that have NO source filter
+  //     OR whose source.groups includes the selected group
+  //   - If both blank: show all (global evaluation)
+
+  const results = [];  // { pol, grp, rank, hit, skippedReason }
+  let polIdx = 0;
+  let firstMatch = null;
+
+  for (const grp of (D.policyGroups||[])) {
+    for (const pid of (grp.policyIds||[])) {
+      const pol = (D.orderedPolicies||[]).find(p => p.id === pid);
+      if (!pol || pol.activity === 'download') continue;
+      polIdx++;
+
+      // ── Source filter check ──────────────────────────────────────────────────
+      let sourceSkip = false;
+      let sourceNote = '';
+      const hasSrc = (pol.source?.users?.length > 0) || (pol.source?.groups?.length > 0);
+
+      if (hasSrc && (userInput || groupId)) {
+        const userMatch  = userInput && (pol.source?.users||[]).some(u => u.toLowerCase() === userInput);
+        const groupMatch = groupId   && (pol.source?.groups||[]).includes(groupId);
+        const ugMatch    = userInput && userGroupIds.size > 0
+          && (pol.source?.groups||[]).some(gid => userGroupIds.has(gid));
+
+        if (!userMatch && !groupMatch && !ugMatch) {
+          sourceSkip = true;
+          const srcUsers  = (pol.source?.users||[]).join(', ')  || '—';
+          const srcGroups = (pol.source?.groups||[]).map(gid => {
+            const g = (D.policyGroups||[]).find(x => x.id === gid);
+            return g ? g.name : gid.slice(0,8)+'...';
+          }).join(', ') || '—';
+          sourceNote = `Applies to: users [${srcUsers}] · groups [${srcGroups}]`;
+        }
+      }
+
+      // ── Disabled check ───────────────────────────────────────────────────────
+      if (pol.enabled === false) {
+        results.push({ pol, grp, rank: polIdx, hit: false, disabled: true, sourceSkip: false, sourceNote: '' });
+        continue;
+      }
+
+      if (sourceSkip) {
+        results.push({ pol, grp, rank: polIdx, hit: false, disabled: false, sourceSkip: true, sourceNote });
+        continue;
+      }
+
+      // ── Domain match check ───────────────────────────────────────────────────
+      let hit = false;
+      let matchReason = '';
+      if (pol.type === 'domain') {
+        const matched = (pol.conditions?.domains||[]).find(d => domain === d || domain.endsWith('.' + d));
+        if (matched) { hit = true; matchReason = `domain "${matched}" matches`; }
+      } else if (pol.type === 'category') {
+        const matched = (pol.conditions?.categories||[]).find(c => c === autoCat);
+        if (matched) { hit = true; matchReason = `category "${autoCat}" matches`; }
+      } else if (pol.type === 'list') {
+        for (const lid of (pol.conditions?.listIds||[])) {
+          const l = (D.urlLists||[]).find(x => x.id === lid);
+          const matched = (l?.domains||[]).find(d => domain === d || domain.endsWith('.' + d));
+          if (matched) { hit = true; matchReason = `found in URL list "${l.name}" via "${matched}"`; break; }
+        }
+      } else if (pol.type === 'combo') {
+        const dHit = (pol.conditions?.domains||[]).find(d => domain === d || domain.endsWith('.' + d));
+        const cHit = (pol.conditions?.categories||[]).find(c => c === autoCat);
+        const lHit = (pol.conditions?.listIds||[]).reduce((acc, lid) => {
+          if (acc) return acc;
+          const l = (D.urlLists||[]).find(x => x.id === lid);
+          return (l?.domains||[]).find(d => domain === d || domain.endsWith('.' + d)) ? l.name : null;
+        }, null);
+        if (dHit) { hit = true; matchReason = `domain "${dHit}" matches`; }
+        else if (cHit) { hit = true; matchReason = `category "${autoCat}" matches`; }
+        else if (lHit) { hit = true; matchReason = `found in URL list "${lHit}"`; }
+      } else if (pol.type === 'threat' || pol.type === 'reputation') {
+        matchReason = 'threat/reputation — evaluated at runtime only';
+      }
+
+      if (hit && !firstMatch) firstMatch = { pol, grp, rank: polIdx };
+      results.push({ pol, grp, rank: polIdx, hit, disabled: false, sourceSkip: false, sourceNote: '', matchReason });
+    }
+  }
+
+  // ── Final action ──────────────────────────────────────────────────────────────
   const def    = D.policySettings?.defaultAction || 'allow';
   const action = firstMatch ? firstMatch.pol.action : def;
   const AC     = { block:'#f87171', warn:'#fbbf24', allow:'#10b981' };
   const col    = AC[action] || '#94a3b8';
 
-  // ── Build result HTML ────────────────────────────────────────────────────────
-  let html = `
+  // ── Context banner ────────────────────────────────────────────────────────────
+  let contextBanner = '';
+  if (userInput || groupId) {
+    const groupName = groupId ? (D.policyGroups||[]).find(g => g.id === groupId)?.name || groupId : null;
+    const parts = [];
+    if (userInput)  parts.push(`User: <strong style="color:#a5b4fc">${esc(userInput)}</strong>`);
+    if (groupName)  parts.push(`Group: <strong style="color:#a5b4fc">${esc(groupName)}</strong>`);
+    if (userInput && userGroupIds.size > 0) {
+      const names = [...userGroupIds].map(gid => {
+        const g = (D.policyGroups||[]).find(x => x.id === gid);
+        return g ? g.name : gid.slice(0,8)+'...';
+      });
+      parts.push(`Member of: <strong style="color:#818cf8">${names.join(', ')}</strong>`);
+    }
+    contextBanner = `<div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:#94a3b8;margin-bottom:14px">
+      🎯 Evaluating for — ${parts.join(' · ')}
+    </div>`;
+  }
+
+  // ── Build result HTML ─────────────────────────────────────────────────────────
+  let html = contextBanner + `
     <div style="background:${col}0d;border:1px solid ${col}33;border-radius:12px;padding:18px;margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
         <span style="font-size:28px">${action==='block'?'🚫':action==='warn'?'⚠️':'✅'}</span>
@@ -85,12 +191,16 @@ export function testUrl() {
         </div>
       </div>
       ${firstMatch
-        ? `<div style="font-size:12px;color:#e2e8f0"><strong style="color:#a5b4fc">Policy #${firstMatch.rank}:</strong> ${esc(firstMatch.pol.name)} <span style="color:#475569">in</span> ${esc(firstMatch.grp.name)}</div>`
+        ? `<div style="font-size:12px;color:#e2e8f0">
+             <strong style="color:#a5b4fc">Policy #${firstMatch.rank}:</strong> ${esc(firstMatch.pol.name)}
+             <span style="color:#475569"> in </span>${esc(firstMatch.grp.name)}
+           </div>
+           <div style="font-size:11px;color:#64748b;margin-top:4px">✓ ${esc(results.find(r=>r.pol.id===firstMatch.pol.id)?.matchReason||'')}</div>`
         : `<div style="font-size:12px;color:#64748b">No policy matched → default: <strong style="color:${col}">${def}</strong></div>`}
-      <div style="font-size:11px;color:#475569;margin-top:6px">Auto-category: <strong style="color:#818cf8">${esc(autoCat)}</strong></div>
+      <div style="font-size:11px;color:#475569;margin-top:8px">Auto-category: <strong style="color:#818cf8">${esc(autoCat)}</strong></div>
     </div>`;
 
-  // URL Lists section
+  // URL Lists
   if (matchedLists.length) {
     html += `<div style="margin-bottom:16px">
       <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">📋 Found in URL Lists</div>
@@ -102,26 +212,46 @@ export function testUrl() {
     </div>`;
   }
 
-  // All matching policies
-  if (matchedPolicies.length > 1) {
-    html += `<div style="margin-bottom:16px">
-      <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">🛡 All Matching Policies (evaluation order)</div>
-      ${matchedPolicies.map((m, i) => {
-        const ac = AC[m.pol.action]||'#94a3b8';
-        return `<div style="background:#0d1424;border:1px solid ${i===0?ac+'44':'rgba(255,255,255,.06)'};border-radius:8px;padding:10px 14px;margin-bottom:6px">
-          <div style="display:flex;align-items:center;gap:10px">
-            <span style="font-size:11px;font-weight:700;color:#475569;width:20px;flex-shrink:0">#${m.rank}</span>
-            <div style="flex:1">
-              <div style="font-size:12px;font-weight:700;color:#e2e8f0">${esc(m.pol.name)}</div>
-              <div style="font-size:11px;color:#64748b">${esc(m.grp.name)} · ${m.pol.type}</div>
+  // All policies in evaluation order
+  html += `<div>
+    <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">🛡 All Policies (evaluation order)</div>
+    ${results.map((r, i) => {
+      const ac = AC[r.pol.action] || '#94a3b8';
+      const isFirst = firstMatch && r.pol.id === firstMatch.pol.id;
+
+      let borderColor = 'rgba(255,255,255,.06)';
+      let opacity = '1';
+      if (isFirst)        borderColor = ac + '55';
+      if (r.disabled)     opacity = '0.4';
+      if (r.sourceSkip)   opacity = '0.5';
+
+      let statusBadge = '';
+      if (isFirst)      statusBadge = '<span style="font-size:9px;font-weight:700;color:#10b981;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:4px;padding:2px 6px">HITS FIRST</span>';
+      else if (r.disabled)   statusBadge = '<span style="font-size:9px;font-weight:700;color:#64748b;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:2px 6px">DISABLED</span>';
+      else if (r.sourceSkip) statusBadge = '<span style="font-size:9px;font-weight:700;color:#f59e0b;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:4px;padding:2px 6px">DIFFERENT USER/GROUP</span>';
+      else if (r.hit && !isFirst) statusBadge = '<span style="font-size:9px;font-weight:700;color:#6366f1;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:4px;padding:2px 6px">ALSO MATCHES</span>';
+      else if (!r.hit)       statusBadge = '<span style="font-size:9px;font-weight:700;color:#475569;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:4px;padding:2px 6px">NO MATCH</span>';
+
+      return `<div style="background:#0d1424;border:1px solid ${borderColor};border-radius:8px;padding:10px 14px;margin-bottom:6px;opacity:${opacity}">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;font-weight:700;color:#475569;width:22px;flex-shrink:0">#${r.rank}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:700;color:#e2e8f0">${esc(r.pol.name)}</div>
+            <div style="font-size:11px;color:#64748b">${esc(r.grp.name)} · ${r.pol.type}
+              ${r.pol.source?.users?.length||r.pol.source?.groups?.length
+                ? `<span style="color:#f59e0b"> · 👤 source-filtered</span>` : ''}
             </div>
-            <span class="badge badge-${m.pol.action}">${m.pol.action}</span>
-            ${i===0?'<span style="font-size:9px;font-weight:700;color:#10b981;background:rgba(16,185,129,.12);border-radius:4px;padding:2px 6px">HITS FIRST</span>':''}
+            ${r.hit && r.matchReason ? `<div style="font-size:11px;color:#4ade80;margin-top:2px">✓ ${esc(r.matchReason)}</div>` : ''}
+            ${r.sourceSkip && r.sourceNote ? `<div style="font-size:11px;color:#f59e0b;margin-top:2px">⚠ ${esc(r.sourceNote)}</div>` : ''}
           </div>
-        </div>`;
-      }).join('')}
-    </div>`;
-  }
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+            <span style="background:${ac}18;color:${ac};padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase">${r.pol.action}</span>
+            ${statusBadge}
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
 
   res.innerHTML = html;
 }

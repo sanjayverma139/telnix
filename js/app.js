@@ -12,7 +12,7 @@ import { initCategoryPolicies }from './categoryPolicies.js';
 import { initUsers }           from './users.js';
 import { initUserGroups }      from './usergroups.js';
 import { initBypass }          from './bypass.js';
-import { initTester }          from './tester.js';
+import { initTester, populateTesterGroups } from './tester.js';
 import { initConfigPage }      from './configPage.js';
 
 document.querySelectorAll('.modal-bg').forEach(m => {
@@ -32,6 +32,7 @@ initUsers();
 initUserGroups();
 initBypass();
 initTester();
+  populateTesterGroups(); // populate group dropdown with current groups
 initConfigPage();
 
 console.log('[Telnix Admin] Loaded ✓');
