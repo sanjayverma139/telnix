@@ -100,30 +100,57 @@
       </div>
       <!-- Filter bar -->
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:6px;background:#060d1a;border:1px solid rgba(99,102,241,.3);border-radius:8px;padding:6px 10px;flex:1;max-width:50px">
+        <div style="display:flex;align-items:center;gap:6px;background:#060d1a;border:1px solid rgba(99,102,241,.3);border-radius:8px;padding:6px 10px;flex:1;min-width:0">
           <span style="color:#64748b;font-size:13px;flex-shrink:0">🔍</span>
           <input type="text" id="log-search" placeholder="Search domain, user, URL..." style="background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;width:100%;min-width:0;margin:0">
         </div>
         <div style="position:relative">
           <button id="btn-add-log-filter" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">＋ ADD FILTER</button>
-          <div id="log-filter-dd" style="display:none;position:absolute;top:38px;left:0;background:#0d1424;border:1px solid rgba(99,102,241,.3);border-radius:12px;width:220px;z-index:500;box-shadow:0 8px 32px rgba(0,0,0,.6);overflow:hidden">
+          <div id="log-filter-dd" style="display:none;position:absolute;top:38px;left:0;background:#0d1424;border:1px solid rgba(99,102,241,.3);border-radius:12px;width:280px;z-index:500;box-shadow:0 8px 32px rgba(0,0,0,.6);overflow:hidden">
             <div style="padding:8px 0">
               <div style="padding:6px 14px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px">Action</div>
               <div class="lf-item" data-lf-type="action" data-lf-val="block" data-lf-label="Action = Block">🔴 Block</div>
               <div class="lf-item" data-lf-type="action" data-lf-val="warn"  data-lf-label="Action = Warn">🟡 Warn</div>
               <div class="lf-item" data-lf-type="action" data-lf-val="allow" data-lf-label="Action = Allow">🟢 Allow</div>
               <div style="border-top:1px solid rgba(255,255,255,.06);margin:4px 0"></div>
+              <div style="padding:6px 14px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px">Date Range</div>
+              <div class="lf-item" data-lf-type="today"  data-lf-val="true" data-lf-label="Today Only">📅 Today Only</div>
+              <div class="lf-item" data-lf-type="last7"  data-lf-val="true" data-lf-label="Last 7 Days">📅 Last 7 Days</div>
+              <div class="lf-item" data-lf-type="last30" data-lf-val="true" data-lf-label="Last 30 Days">📅 Last 30 Days</div>
+              <div class="lf-item" data-lf-type="custom-range" data-lf-val="" data-lf-label="Custom Range">📅 Custom Range...</div>
+              <!-- Custom range form -->
+              <div id="custom-range-form" style="display:none;padding:10px 14px;border-top:1px solid rgba(255,255,255,.06)">
+                <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">From</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+                  <input type="date" id="dr-from-date" style="font-size:11px;padding:5px 8px;margin:0">
+                  <input type="time" id="dr-from-time" value="00:00" style="font-size:11px;padding:5px 8px;margin:0">
+                </div>
+                <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">To</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+                  <input type="date" id="dr-to-date" style="font-size:11px;padding:5px 8px;margin:0">
+                  <input type="time" id="dr-to-time" value="23:59" style="font-size:11px;padding:5px 8px;margin:0">
+                </div>
+                <button id="btn-apply-daterange" style="width:100%;padding:7px;background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;border-radius:7px;color:#fff;font-size:12px;font-weight:700;cursor:pointer">Apply Range</button>
+              </div>
+              <div style="border-top:1px solid rgba(255,255,255,.06);margin:4px 0"></div>
+              <div style="padding:6px 14px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px">User</div>
+              <div class="lf-item" data-lf-type="user-email-input" data-lf-val="" data-lf-label="Filter by Email">👤 Filter by Email...</div>
+              <!-- User email form -->
+              <div id="user-email-form" style="display:none;padding:10px 14px;border-top:1px solid rgba(255,255,255,.06)">
+                <input type="email" id="filter-user-email" placeholder="user@company.com" style="font-size:11px;padding:6px 10px;margin-bottom:8px">
+                <button id="btn-apply-useremail" style="width:100%;padding:7px;background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;border-radius:7px;color:#fff;font-size:12px;font-weight:700;cursor:pointer">Apply</button>
+              </div>
+              <div style="border-top:1px solid rgba(255,255,255,.06);margin:4px 0"></div>
               <div style="padding:6px 14px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px">Threat</div>
               <div class="lf-item" data-lf-type="threat" data-lf-val="malicious" data-lf-label="Known Malicious">🦠 Known Malicious</div>
-              <div class="lf-item" data-lf-type="threat" data-lf-val="high" data-lf-label="Risk ≥ 55 (High)">🔴 High Risk (≥55)</div>
-              <div class="lf-item" data-lf-type="threat" data-lf-val="medium" data-lf-label="Risk 30–54 (Medium)">🟡 Medium Risk (30–54)</div>
+              <div class="lf-item" data-lf-type="threat" data-lf-val="high"      data-lf-label="Risk ≥ 55 (High)">🔴 High Risk (≥55)</div>
+              <div class="lf-item" data-lf-type="threat" data-lf-val="medium"    data-lf-label="Risk 30–54 (Medium)">🟡 Medium Risk (30–54)</div>
               <div style="border-top:1px solid rgba(255,255,255,.06);margin:4px 0"></div>
               <div style="padding:6px 14px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px">Result</div>
               <div class="lf-item" data-lf-type="proceeded" data-lf-val="true" data-lf-label="User Bypassed Warning">↩ User Bypassed Warning</div>
-              <div class="lf-item" data-lf-type="today" data-lf-val="true" data-lf-label="Today Only">📅 Today Only</div>
               <div style="border-top:1px solid rgba(255,255,255,.06);margin:4px 0"></div>
               <div style="padding:6px 14px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px">Activity</div>
-              <div class="lf-item" data-lf-type="activity" data-lf-val="browse" data-lf-label="Activity = Browse">🌐 Browse</div>
+              <div class="lf-item" data-lf-type="activity" data-lf-val="browse"   data-lf-label="Activity = Browse">🌐 Browse</div>
               <div class="lf-item" data-lf-type="activity" data-lf-val="download" data-lf-label="Activity = Download">📥 Download</div>
             </div>
           </div>
@@ -132,6 +159,7 @@
       <div id="log-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;min-height:0"></div>
       <div class="tbl-wrap"><table><thead><tr><th>Time</th><th>User</th><th>Domain</th><th>Activity</th><th>Action</th><th>Category</th><th>🛡 Score</th><th>Policy</th><th></th></tr></thead>
       <tbody id="logs-tb"><tr><td colspan="9" class="loading">Loading...</td></tr></tbody></table></div>
+      <div id="log-pagination"></div>
     </div>
 
     <!-- Policies -->

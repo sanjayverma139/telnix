@@ -47,22 +47,45 @@ export async function saveData() {
   } catch (e) { console.error('[API] saveData error:', e); return false; }
 }
 
-export async function fetchLogs(filters = {}) {
-  let url = `/rest/v1/activity_logs?org_id=eq.${ORG}&order=ts.desc&limit=500`;
+export const PAGE_SIZE = 100;
+
+export async function fetchLogs(filters = {}, page = 0) {
+  const offset = page * PAGE_SIZE;
+
+  // Build server-side filters (applied before fetching)
+  let url = `/rest/v1/activity_logs?org_id=eq.${ORG}&order=ts.desc`;
+
+  // Date range — push to server for efficiency
+  if (filters.tsFrom) url += `&ts=gte.${filters.tsFrom}`;
+  if (filters.tsTo)   url += `&ts=lte.${filters.tsTo}`;
+
+  // Action/activity — server side
   if (filters.action)   url += `&action=eq.${filters.action}`;
   if (filters.activity) url += `&activity=eq.${filters.activity}`;
+
+  // User email — server side exact match (case insensitive via ilike)
+  if (filters.userEmail) url += `&user_email=ilike.*${encodeURIComponent(filters.userEmail)}*`;
+
+  // Count total before pagination (same filters, no limit)
+  const countUrl = url + `&select=count`;
+  const countRes = await sbf(countUrl, { headers: { 'Prefer': 'count=exact' } });
+  const totalCount = parseInt(countRes.headers?.get?.('content-range')?.split('/')?.[1] || '0', 10) || 0;
+
+  // Fetch page
+  url += `&limit=${PAGE_SIZE}&offset=${offset}`;
   const r = await sbf(url);
-  if (!r.ok) return [];
+  if (!r.ok) return { logs: [], total: 0 };
   let logs = await r.json();
+
+  // Client-side filters (can't push to server easily)
   if (filters.search)         logs = logs.filter(l => (l.domain||'').toLowerCase().includes(filters.search) || (l.user_email||'').toLowerCase().includes(filters.search) || (l.url||'').toLowerCase().includes(filters.search));
-  if (filters.userEmail)      logs = logs.filter(l => (l.user_email||'').toLowerCase().includes(filters.userEmail));
   if (filters.category)       logs = logs.filter(l => (l.category||'') === filters.category);
-  if (filters.today)          { const m = new Date(); m.setHours(0,0,0,0); logs = logs.filter(l => l.ts >= m.getTime()); }
   if (filters.proceeded)      logs = logs.filter(l => l.proceeded === true);
   if (filters.knownMalicious) logs = logs.filter(l => l.known_malicious === true);
   if (filters.highRisk)       logs = logs.filter(l => (l.threat_score||0) >= 55);
   if (filters.medRisk)        logs = logs.filter(l => (l.threat_score||0) >= 30 && (l.threat_score||0) < 55);
-  return logs;
+
+  return { logs, total: totalCount };
 }
 
 export async function fetchDashStats() {
