@@ -438,20 +438,34 @@
   <div class="modal">
     <div class="modal-title" id="cc-modal-title">📁 New Custom Category</div>
     <div class="alert" id="cc-al"></div>
-    <div class="grid2">
-      <div><label>Name *</label><input type="text" id="cc-name" placeholder="e.g. Blocked Entertainment"></div>
-      <div><label>Description</label><input type="text" id="cc-desc" placeholder="Optional"></div>
+    <div class="grid2" style="margin-bottom:16px">
+      <div><label>Name *</label><input type="text" id="cc-name" placeholder="e.g. Blocked Entertainment" style="margin:0"></div>
+      <div><label>Description</label><input type="text" id="cc-desc" placeholder="Optional" style="margin:0"></div>
     </div>
-    <label>Domains (one per line, optional)</label>
-    <textarea id="cc-domains" rows="3" placeholder="domain1.com&#10;domain2.com"></textarea>
-    <label>Include Predefined Categories</label>
-    <div id="cc-pred-cats" style="display:flex;flex-wrap:wrap;gap:4px;padding:10px;background:#060d1a;border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:14px;max-height:130px;overflow-y:auto"></div>
-    <label>Include URL Lists</label>
-    <div id="cc-url-lists" style="display:flex;flex-direction:column;gap:4px;padding:10px;background:#060d1a;border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:14px;max-height:130px;overflow-y:auto"><div style="color:#64748b;font-size:12px">No URL lists yet</div></div>
-    <label>Exclusion URLs (one per line)</label>
-    <textarea id="cc-excl-urls" rows="2" placeholder="allowedsite.com"></textarea>
-    <label>Exclusion URL Lists</label>
-    <div id="cc-excl-lists" style="display:flex;flex-direction:column;gap:4px;padding:10px;background:#060d1a;border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:14px;max-height:100px;overflow-y:auto"><div style="color:#64748b;font-size:12px">No URL lists yet</div></div>
+
+    <div style="margin-bottom:14px">
+      <label style="color:#a78bfa;display:flex;align-items:center;gap:6px;margin-bottom:6px">🏷 Predefined Categories</label>
+      <div id="cc-pred-cats-wrap"></div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <label style="color:#60a5fa;display:flex;align-items:center;gap:6px;margin-bottom:6px">📋 URL Lists (Included)</label>
+      <div id="cc-url-lists-wrap"></div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <label>Domains (one per line, optional)</label>
+      <textarea id="cc-domains" rows="3" placeholder="domain1.com&#10;domain2.com"></textarea>
+    </div>
+
+    <div style="background:#0a1120;border:1px solid rgba(239,68,68,.15);border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;color:#f87171;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">🚫 Exclusions</div>
+      <label style="color:#94a3b8;font-size:10px;margin-bottom:6px">Exclude URL Lists</label>
+      <div id="cc-excl-lists-wrap" style="margin-bottom:12px"></div>
+      <label style="color:#94a3b8;font-size:10px;margin-bottom:6px">Exclude Specific Domains</label>
+      <textarea id="cc-excl-urls" rows="2" placeholder="e.g. allowedsite.com" style="margin:0"></textarea>
+    </div>
+
     <div class="modal-footer">
       <button class="btn btn-ghost" id="btn-cancel-cc">Cancel</button>
       <button class="btn btn-primary" id="btn-save-cc">Save Category</button>
@@ -481,6 +495,21 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" id="btn-cancel-mtg">Cancel</button>
       <button class="btn btn-primary" id="btn-save-mtg">Move Policy</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal (shared by URL Lists + Custom Categories) -->
+<div class="modal-bg" id="del-confirm-modal">
+  <div class="modal modal-sm">
+    <div class="modal-title" style="color:#f87171">🗑 Delete <span id="del-modal-type"></span>?</div>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:20px">
+      You are about to delete <strong style="color:#e2e8f0" id="del-modal-name"></strong>.<br>
+      <span style="color:#64748b;font-size:12px">Policies referencing this will stop matching. This change is staged and requires Apply to take effect.</span>
+    </p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-del-cancel">Cancel</button>
+      <button class="btn btn-danger" id="btn-del-confirm">🗑 Stage Delete</button>
     </div>
   </div>
 </div>
