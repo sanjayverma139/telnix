@@ -303,14 +303,11 @@ function calClick(ds) {
   renderCalendar();
 }
 function calHover(ds) {
-  if (calFrom && !calTo) {
-    hoverDate=ds; renderCalendar();
-    // highlight range on hover
-    document.querySelectorAll('.cal-day[data-date]').forEach(el=>{
-      const d=el.dataset.date;
-      if(calFrom&&!calTo&&d>calFrom&&d<=ds) el.classList.add('in-range');
-    });
-  }
+  if (!calFrom || calTo) return; // only show hover range when picking second date
+  document.querySelectorAll('.cal-day[data-date]').forEach(el => {
+    const d = el.dataset.date;
+    el.classList.toggle('in-range', d > calFrom && d <= ds);
+  });
 }
 function calNav(dir) {
   calMonth += dir;
