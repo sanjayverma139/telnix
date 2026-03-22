@@ -5,7 +5,7 @@ import { D, setCurAct, setCurActiv, setCurType,
          setEPolId, curAct, curActiv, curType, ePolId } from './state.js';
 import { $, esc, showAlert, openModal, closeModal } from './utils.js';
 import { saveData, loadData } from './api.js';
-import { getGroups }          from './usergroups.js';
+
 
 const TC = {
   domain:'#818cf8', category:'#34d399', list:'#60a5fa',
@@ -642,6 +642,7 @@ async function buildSourceDropdowns(selectedUsers=[], selectedGroups=[]) {
       userEmails = [...new Set(rows.map(l=>l.user_email).filter(Boolean))].sort();
     }
     const userItems  = userEmails.map(e => ({ id:e, name:e }));
+    const { getGroups } = await import('./usergroups.js');
     const groupItems = getGroups().map(g => ({ id:g.id, name:g.name }));
 
     _ddSourceUsers  = buildChipDropdown('pm-source-users-wrap',  userItems,  selectedUsers,  { placeholder:'Search or type email...' });
