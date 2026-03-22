@@ -40,16 +40,18 @@ async function doLogin() {
 
     const payload = await loadData();
     if (payload) {
-      D.orderedPolicies  = payload.orderedPolicies  || [];
-      D.pendingPolicies  = payload.pendingPolicies  || []; // ← restore pending on login
-      D.policyGroups     = payload.policyGroups     || [];
-      D.urlLists         = payload.urlLists          || [];
-      D.customCategories = payload.customCategories  || [];
-      D.policySettings   = payload.policySettings    || { defaultAction: 'allow' };
-      D.fileTypeLists    = payload.fileTypeLists     || [];
-      D.bypassTokens     = payload.bypassTokens      || [];
-      D.categoryPolicies = payload.categoryPolicies  || {};
-      D.agentConfig      = payload.agentConfig       || {};
+      D.orderedPolicies         = payload.orderedPolicies         || [];
+      D.pendingPolicies         = payload.pendingPolicies         || [];
+      D.policyGroups            = payload.policyGroups            || [];
+      D.urlLists                = payload.urlLists                || [];
+      D.pendingUrlLists         = payload.pendingUrlLists         || [];
+      D.customCategories        = payload.customCategories        || [];
+      D.pendingCustomCategories = payload.pendingCustomCategories || [];
+      D.policySettings          = payload.policySettings          || { defaultAction: 'allow' };
+      D.fileTypeLists           = payload.fileTypeLists           || [];
+      D.bypassTokens            = payload.bypassTokens            || [];
+      D.categoryPolicies        = payload.categoryPolicies        || {};
+      D.agentConfig             = payload.agentConfig             || {};
     }
 
     if (!D.policyGroups.find(g => g.name === 'Default'))

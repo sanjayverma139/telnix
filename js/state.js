@@ -1,16 +1,18 @@
 // state.js — Shared mutable application state
 
 export const D = {
-  orderedPolicies:  [],  // LIVE — extension reads these
-  pendingPolicies:  [],  // STAGING — admin panel only, extension never reads
-  policyGroups:     [],
-  urlLists:         [],
-  customCategories: [],
-  policySettings:   { defaultAction: 'allow' },
-  fileTypeLists:    [],
-  bypassTokens:     [],
-  categoryPolicies: {},
-  agentConfig:      {},
+  orderedPolicies:          [],  // LIVE — extension reads
+  pendingPolicies:          [],  // STAGED — admin panel only
+  policyGroups:             [],
+  urlLists:                 [],  // LIVE — extension reads
+  pendingUrlLists:          [],  // STAGED — admin panel only
+  customCategories:         [],  // LIVE — extension reads
+  pendingCustomCategories:  [],  // STAGED — admin panel only
+  policySettings:           { defaultAction: 'allow' },
+  fileTypeLists:            [],
+  bypassTokens:             [],
+  categoryPolicies:         {},
+  agentConfig:              {},
 };
 
 export let TOK = null;
