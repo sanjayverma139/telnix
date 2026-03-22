@@ -157,22 +157,28 @@ export function renderCats() {
 
   const liveHtml = live.map(cat => {
     const hasPendingEdit = (D.pendingCustomCategories||[]).find(p=>p.type==='edit_customcat'&&p.originalId===cat.id);
-    
+    const chips = [
+      ...(cat.predefinedCategories||[]).map(c=>`<span style="background:rgba(167,139,250,.1);color:#a78bfa;border-radius:4px;padding:1px 7px;font-size:10px">${esc(c)}</span>`),
+      ...(cat.urlListIds||[]).map(id=>{ const l=(D.urlLists||[]).find(x=>x.id===id); return l?`<span style="background:rgba(96,165,250,.1);color:#60a5fa;border-radius:4px;padding:1px 7px;font-size:10px">📋 ${esc(l.name)}</span>`:''; }),
+      (cat.domains||[]).length?`<span style="background:rgba(16,185,129,.1);color:#10b981;border-radius:4px;padding:1px 7px;font-size:10px">${(cat.domains||[]).length} domains</span>`:'',
+      ((cat.exclusionUrls||[]).length+(cat.exclusionListIds||[]).length)?`<span style="background:rgba(239,68,68,.08);color:#f87171;border-radius:4px;padding:1px 7px;font-size:10px">−${(cat.exclusionUrls||[]).length+(cat.exclusionListIds||[]).length} excl.</span>`:'',
+    ].filter(Boolean).join(' ');
     return `<div class="card" style="cursor:pointer;${hasPendingEdit?'opacity:0.55;':''}" onclick="window._openCCModal('${cat.id}')">
-  <div style="display:flex;align-items:center;gap:10px">
-    <div style="flex:1">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:13px;font-weight:700">${esc(cat.name)}</span>
-        ${hasPendingEdit?'<span style="font-size:9px;font-weight:700;color:#f59e0b;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:4px;padding:1px 6px">EDIT PENDING</span>':''}
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:13px;font-weight:700">${esc(cat.name)}</span>
+            ${hasPendingEdit?'<span style="font-size:9px;font-weight:700;color:#f59e0b;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:4px;padding:1px 6px">EDIT PENDING</span>':''}
+          </div>
+          ${cat.description?`<div style="font-size:11px;color:#64748b;margin-bottom:6px">${esc(cat.description)}</div>`:''}
+          <div style="display:flex;flex-wrap:wrap;gap:4px">${chips}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          ${!hasPendingEdit?`<button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();window._openCCModal('${cat.id}')">✏ Edit</button>`:''}
+          ${!hasPendingEdit?`<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();window._confirmDelCC('${cat.id}')">✕</button>`:''}
+        </div>
       </div>
-      ${cat.description?`<div style="font-size:11px;color:#64748b;margin-top:2px">${esc(cat.description)}</div>`:''}
-    </div>
-    <div style="display:flex;gap:6px;flex-shrink:0">
-      ${!hasPendingEdit?`<button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();window._openCCModal('${cat.id}')">✏ Edit</button>`:''}
-      ${!hasPendingEdit?`<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();window._confirmDelCC('${cat.id}')">✕</button>`:''}
-    </div>
-  </div>
-</div>`;
+    </div>`;
   }).join('');
 
   const pendingHtml = pending.map(item => {

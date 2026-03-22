@@ -295,9 +295,8 @@
   <div class="modal">
     <div class="modal-title">🛡 <span id="pm-title">New Policy</span></div>
     <div class="alert" id="pm-al"></div>
-    <div class="grid2" style="margin-bottom:14px">
-      <div><label>Policy Name *</label><input type="text" id="pm-name" placeholder="e.g. Block Social Media" style="margin:0"></div>
-      <div><label>Group *</label><select id="pm-grp" style="margin:0"></select></div>
+    <div style="margin-bottom:14px">
+      <label>Policy Name *</label><input type="text" id="pm-name" placeholder="e.g. Block Social Media" style="margin:0">
     </div>
     <label>Policy Type</label>
     <div class="type-cards">
@@ -316,27 +315,24 @@
       <textarea id="pm-doms" placeholder="facebook.com&#10;instagram.com&#10;tiktok.com"></textarea>
     </div>
     <div id="crit-category" class="hid">
-      <label>Categories</label>
-      <div class="chip-wrap" id="pm-cat-chips"></div>
-      <input type="text" id="pm-cat-search" placeholder="Search categories..." style="margin-bottom:6px">
-      <div class="cat-list" id="pm-cat-list"></div>
+      <label>Select Categories <span style="color:#475569;font-weight:400;text-transform:none;letter-spacing:0">(use filter to switch All / Predefined / Custom)</span></label>
+      <div id="pm-cat-wrap" style="margin-bottom:14px"></div>
     </div>
     <div id="crit-list" class="hid">
-      <label>URL Lists</label>
-      <div id="pm-list-cbs" style="display:flex;flex-direction:column;gap:6px;padding:10px;background:#060d1a;border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:14px;max-height:160px;overflow-y:auto"></div>
+      <label>Select URL Lists</label>
+      <div id="pm-list-wrap" style="margin-bottom:14px"></div>
     </div>
     <div id="crit-customcat" class="hid">
-      <label>Custom Categories</label>
-      <div class="chip-wrap" id="pm-cc-chips"></div>
-      <div class="cat-list" id="pm-cc-list" style="margin-bottom:14px"></div>
+      <label>Select Custom Categories</label>
+      <div id="pm-cc-wrap" style="margin-bottom:14px"></div>
     </div>
     <div id="crit-combo" class="hid">
       <label>Domains (optional)</label>
       <textarea id="pm-combo-doms" rows="2" placeholder="domain1.com&#10;domain2.com"></textarea>
-      <label>Categories (optional — same as Category type)</label>
-      <div style="font-size:11px;color:#64748b;margin-bottom:8px">Use the Category criteria type for category selection. Combo applies domains + lists together.</div>
+      <label style="margin-top:4px">Categories (optional)</label>
+      <div id="pm-combo-cat-wrap" style="margin-bottom:10px"></div>
       <label>URL Lists (optional)</label>
-      <div id="pm-combo-list-cbs" style="display:flex;flex-direction:column;gap:6px;padding:10px;background:#060d1a;border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:14px;max-height:120px;overflow-y:auto"></div>
+      <div id="pm-combo-list-wrap" style="margin-bottom:14px"></div>
     </div>
     <div id="crit-threat" class="hid">
       <div class="grid2">
@@ -349,8 +345,7 @@
         Blocks URLs confirmed malicious by URLhaus or Google Safe Browsing reputation database.
       </div>
     </div>
-
-    <label>Action</label>
+        <label>Action</label>
     <div class="action-btns">
       <button class="abtn sel-block" data-a="block">🔴 Block</button>
       <button class="abtn" data-a="warn">🟡 Warn</button>
@@ -495,6 +490,60 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" id="btn-cancel-mtg">Cancel</button>
       <button class="btn btn-primary" id="btn-save-mtg">Move Policy</button>
+    </div>
+  </div>
+</div>
+
+<!-- Place Policy Modal -->
+<div class="modal-bg" id="place-modal">
+  <div class="modal modal-sm">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+      <span style="font-size:20px">📌</span>
+      <div>
+        <div class="modal-title" style="margin:0">Place Policy</div>
+        <div style="font-size:12px;color:#64748b">Choose where <strong style="color:#e2e8f0" id="place-pol-name"></strong> should appear</div>
+      </div>
+    </div>
+
+    <label>Group</label>
+    <select id="place-grp-select" style="margin-bottom:16px"></select>
+
+    <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Position in Group</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+      <div class="place-opt" data-pos="top" style="padding:12px 16px;border-radius:10px;border:1.5px solid rgba(255,255,255,.08);cursor:pointer;transition:.1s">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:14px">↑</span>
+          <div><div style="font-size:13px;font-weight:600;color:#e2e8f0">Top of Group</div><div style="font-size:11px;color:#475569">First in group — highest priority</div></div>
+        </div>
+      </div>
+      <div class="place-opt sel" data-pos="bottom" style="padding:12px 16px;border-radius:10px;border:1.5px solid rgba(99,102,241,.5);background:rgba(99,102,241,.08);cursor:pointer;transition:.1s">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:14px">↓</span>
+          <div><div style="font-size:13px;font-weight:600;color:#a5b4fc">Bottom of Group (default)</div><div style="font-size:11px;color:#475569">Last in group</div></div>
+        </div>
+      </div>
+      <div class="place-opt" data-pos="after" style="padding:12px 16px;border-radius:10px;border:1.5px solid rgba(255,255,255,.08);cursor:pointer;transition:.1s">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:14px">↓</span>
+          <div><div style="font-size:13px;font-weight:600;color:#e2e8f0">After a Policy</div><div style="font-size:11px;color:#475569">Place directly after</div></div>
+        </div>
+      </div>
+      <div class="place-opt" data-pos="before" style="padding:12px 16px;border-radius:10px;border:1.5px solid rgba(255,255,255,.08);cursor:pointer;transition:.1s">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:14px">↑</span>
+          <div><div style="font-size:13px;font-weight:600;color:#e2e8f0">Before a Policy</div><div style="font-size:11px;color:#475569">Place directly before</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="place-ref-row" style="display:none;margin-bottom:14px">
+      <label>Reference Policy</label>
+      <select id="place-ref-select" style="margin:0"></select>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-place-cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-place-add">✓ Add to Group</button>
     </div>
   </div>
 </div>
