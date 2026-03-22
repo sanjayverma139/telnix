@@ -5,6 +5,7 @@ import { D, setCurAct, setCurActiv, setCurType,
          setEPolId, curAct, curActiv, curType, ePolId } from './state.js';
 import { $, esc, showAlert, openModal, closeModal } from './utils.js';
 import { saveData, loadData } from './api.js';
+import { getGroups }          from './usergroups.js';
 
 const TC = {
   domain:'#818cf8', category:'#34d399', list:'#60a5fa',
@@ -220,7 +221,10 @@ export function renderPols() {
           ${(pendingEdit?pendingEdit.changes.note:pol.note)?`<div style="font-size:10px;color:#475569;font-weight:400">${esc(pendingEdit?pendingEdit.changes.note:pol.note)}</div>`:''}
         </td>
         <td><span style="background:${tc}18;color:${tc};padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700">${icon} ${pol.type||'domain'}</span></td>
-        <td style="font-size:11px;color:#64748b;max-width:200px"><span title="${esc(cond)}" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(cond)}</span></td>
+        <td style="font-size:11px;color:#64748b;max-width:200px">
+          <span title="${esc(cond)}" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(cond)}</span>
+          ${(pendingEdit?pendingEdit.changes.source:pol.source) ? buildSourceSummary(pendingEdit?pendingEdit.changes.source:pol.source) : ''}
+        </td>
         <td><span class="badge badge-${pol.action||'block'}" style="font-size:11px">${pol.action||'block'}</span> <span style="font-size:11px;color:#475569">${actBadge}</span></td>
         <td style="text-align:center">${schedBadge}</td>
         <td style="text-align:center;color:#64748b;font-size:12px">—</td>
@@ -504,6 +508,7 @@ function buildChipDropdown(containerId, allItems, selectedIds, opts={}) {
 }
 
 let _ddCat=null,_ddList=null,_ddComboList=null,_savedPolData=null;
+let _ddSourceUsers=null,_ddSourceGroups=null;
 
 // ── Policy modal ──────────────────────────────────────────────────────────────
 export function openPolModal(id=null,pendingItem=null){
@@ -524,6 +529,9 @@ export function openPolModal(id=null,pendingItem=null){
   _ddCat=buildChipDropdown('pm-cat-wrap',catItems,[],{placeholder:'Search categories...',hasFilter:true});
   _ddList=buildChipDropdown('pm-list-wrap',listItems,[],{placeholder:'Search URL lists...'});
   _ddComboList=buildChipDropdown('pm-combo-list-wrap',listItems,[],{placeholder:'Search URL lists...'});
+  // Source dropdowns — built asynchronously after modal opens
+  _ddSourceUsers=null; _ddSourceGroups=null;
+  buildSourceDropdowns(pol?.source?.users||[], pol?.source?.groups||[]);
   const pol=isPending?pendingItem.policyData:(isEdit?D.orderedPolicies.find(p=>p.id===id):null);
   if(pol){
     $('pm-name').value=pol.name||'';$('pm-note').value=pol.note||'';
@@ -566,7 +574,10 @@ function collectPolData(){
   if(curType==='combo')     {conditions.domains=comboDoms;conditions.categories=predCatIds;conditions.listIds=comboListIds;}
   let schedule=null;
   if($('pm-sched-enabled')?.checked){const dm={Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6,Sun:0};const days=[...document.querySelectorAll('.pm-day-btn.active')].map(b=>dm[b.dataset.day]).filter(d=>d!=null);schedule={startTime:$('pm-sched-start')?.value||'09:00',endTime:$('pm-sched-end')?.value||'17:00',days:days.length?days:[1,2,3,4,5],outsideScheduleAction:$('pm-sched-outside')?.value||'allow'};}
-  return{name,type:curType,action:curAct,activity:curActiv,conditions,note:$('pm-note')?.value.trim()||'',enabled:$('pm-en').classList.contains('on'),fileTypeListId:$('pm-ftl')?.value||null,schedule};
+  const sourceUsers  = _ddSourceUsers?.getSelected()  || [];
+  const sourceGroups = _ddSourceGroups?.getSelected() || [];
+  const source = (sourceUsers.length || sourceGroups.length) ? { users: sourceUsers, groups: sourceGroups } : null;
+  return{name,type:curType,action:curAct,activity:curActiv,conditions,note:$('pm-note')?.value.trim()||'',enabled:$('pm-en').classList.contains('on'),fileTypeListId:$('pm-ftl')?.value||null,schedule,source};
 }
 
 export function savePol(){
@@ -616,6 +627,41 @@ export async function pushAll(){
   const btn=$('push-btn');btn.disabled=true;btn.textContent='Pushing...';
   try{D.policySettings=D.policySettings||{};D.policySettings.defaultAction=$('def-action')?.value||'allow';const ok=await saveData();showAlert('pol-al',ok?'success':'error',ok?'✓ Pushed to all users':'Push failed');}catch(e){showAlert('pol-al','error','Error: '+e.message);}
   btn.disabled=false;btn.textContent='☁ Push to Users';
+}
+
+// ── Source dropdowns ─────────────────────────────────────────────────────────
+async function buildSourceDropdowns(selectedUsers=[], selectedGroups=[]) {
+  // Get known users from activity logs
+  try {
+    const { sbf }   = await import('./api.js');
+    const { ORG }   = await import('./config.js');
+    const r = await sbf(`/rest/v1/activity_logs?org_id=eq.${ORG}&select=user_email&limit=500`);
+    let userEmails = [];
+    if (r.ok) {
+      const rows = await r.json();
+      userEmails = [...new Set(rows.map(l=>l.user_email).filter(Boolean))].sort();
+    }
+    const userItems  = userEmails.map(e => ({ id:e, name:e }));
+    const groupItems = getGroups().map(g => ({ id:g.id, name:g.name }));
+
+    _ddSourceUsers  = buildChipDropdown('pm-source-users-wrap',  userItems,  selectedUsers,  { placeholder:'Search or type email...' });
+    _ddSourceGroups = buildChipDropdown('pm-source-groups-wrap', groupItems, selectedGroups, { placeholder:'Search groups...' });
+
+    // Show/hide group row based on whether source section has any selection
+    updateSourceGroupVisibility();
+  } catch(e) { console.warn('[Source] failed to load users:', e); }
+}
+
+function updateSourceGroupVisibility() {
+  // Group row is always shown — user can select groups independently
+}
+
+function buildSourceSummary(source) {
+  if (!source) return '';
+  const parts = [];
+  if (source.users?.length)  parts.push(`<span style="font-size:10px;color:#a5b4fc">👤 ${source.users.length} user${source.users.length!==1?'s':''}</span>`);
+  if (source.groups?.length) parts.push(`<span style="font-size:10px;color:#34d399">👥 ${source.groups.length} group${source.groups.length!==1?'s':''}</span>`);
+  return parts.length ? `<div style="display:flex;gap:6px;margin-top:3px">${parts.join('')}</div>` : '';
 }
 
 export function initPolicies(){

@@ -10,13 +10,13 @@ import { initFileTypes }       from './filetypes.js';
 import { initCategories }      from './categories.js';
 import { initCategoryPolicies }from './categoryPolicies.js';
 import { initUsers }           from './users.js';
+import { initUserGroups }      from './usergroups.js';
 import { initBypass }          from './bypass.js';
 import { initTester }          from './tester.js';
 import { initConfigPage }      from './configPage.js';
 
-// Close modals on background click
 document.querySelectorAll('.modal-bg').forEach(m => {
-  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); });
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
 });
 
 initAuth();
@@ -29,6 +29,7 @@ initFileTypes();
 initCategories();
 initCategoryPolicies();
 initUsers();
+initUserGroups();
 initBypass();
 initTester();
 initConfigPage();

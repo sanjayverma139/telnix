@@ -54,7 +54,8 @@
     <div class="nav" data-page="filetypes">📝 File Type Lists</div>
     <div class="nav" data-page="categories">📁 Custom Categories</div>
     <div class="sb-section">Access</div>
-    <div class="nav" data-page="users">👥 Users</div>
+    <div class="nav" data-page="usergroups">👥 User Groups</div>
+    <div class="nav" data-page="users">🙍 Users</div>
     <div class="nav" data-page="bypass">🔑 Bypass Codes</div>
     <div class="sb-section">Tools</div>
     <div class="nav" data-page="urltester">🔍 URL Tester</div>
@@ -248,6 +249,23 @@
       <div id="cat-con"><div class="loading">Loading...</div></div>
     </div>
 
+    <!-- User Groups -->
+    <div class="page" id="page-usergroups">
+      <div class="page-header">
+        <div>
+          <div class="page-title">User Groups</div>
+          <div class="page-sub">Create groups and assign members — policies can target specific groups</div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="btn-new-ug">+ New Group</button>
+      </div>
+      <div class="alert" id="ug-list-alert"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <input type="text" id="ug-search" placeholder="🔍  Search groups..." style="flex:1;margin:0">
+        <span id="ug-count" style="font-size:12px;color:#64748b;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:5px 14px;white-space:nowrap"></span>
+      </div>
+      <div id="ug-con"><div class="loading">Loading...</div></div>
+    </div>
+
     <!-- Users -->
     <div class="page" id="page-users">
       <div class="page-header"><div><div class="page-title">Users</div><div class="page-sub">Manage who can log into the extension</div></div></div>
@@ -336,6 +354,23 @@
     <div style="margin-bottom:14px">
       <label>Policy Name *</label><input type="text" id="pm-name" placeholder="e.g. Block Social Media" style="margin:0">
     </div>
+    <!-- Source section -->
+    <div style="background:#0a1120;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px;margin-bottom:16px">
+      <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">📌 Source <span style="color:#374151;font-weight:400;text-transform:none;letter-spacing:0">(who this policy applies to — leave empty for everyone)</span></div>
+      <div style="margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <span style="font-size:12px;color:#94a3b8;font-weight:600;width:52px;flex-shrink:0">User =</span>
+          <div id="pm-source-users-wrap" style="flex:1"></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:12px;color:#94a3b8;font-weight:600;width:52px;flex-shrink:0">Group =</span>
+          <div id="pm-source-groups-wrap" style="flex:1"></div>
+        </div>
+      </div>
+    </div>
+
     <label>Policy Type</label>
     <div class="type-cards">
       <div class="pm-type-card sel" data-t="domain"><div class="type-card-icon">🌐</div><div class="type-card-name">Domain</div><div class="type-card-sub">Specific domains</div></div>
@@ -600,6 +635,41 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" id="btn-place-cancel">Cancel</button>
       <button class="btn btn-primary" id="btn-place-add">✓ Add to Group</button>
+    </div>
+  </div>
+</div>
+
+<!-- User Group Modal -->
+<div class="modal-bg" id="ug-modal">
+  <div class="modal">
+    <div class="modal-title" id="ug-modal-title">👥 New Group</div>
+    <div class="alert" id="ug-al"></div>
+    <label>Group Name *</label>
+    <input type="text" id="ug-group-name" placeholder="e.g. Engineering, HR, Marketing" style="margin-bottom:16px">
+
+    <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Members</div>
+    <div id="ug-member-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:#060d1a;border:1px solid rgba(255,255,255,.06);border-radius:8px;min-height:36px;margin-bottom:8px"></div>
+    <input type="text" id="ug-member-search" placeholder="🔍 Search users or type email + Enter to add manually..." style="margin-bottom:4px">
+    <div id="ug-member-dd" style="background:#060d1a;border:1px solid rgba(99,102,241,.2);border-radius:8px;max-height:200px;overflow-y:auto;margin-bottom:14px"></div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-ug-cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-ug-save">Save Group</button>
+    </div>
+  </div>
+</div>
+
+<!-- User Group Delete Confirm Modal -->
+<div class="modal-bg" id="ug-del-modal">
+  <div class="modal modal-sm">
+    <div class="modal-title" style="color:#f87171">🗑 Delete Group?</div>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:20px">
+      Delete group "<strong style="color:#e2e8f0" id="ug-del-name"></strong>"?<br>
+      <span style="font-size:12px;color:#64748b">Policies targeting this group will fall back to matching everyone.</span>
+    </p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-ug-del-cancel">Cancel</button>
+      <button class="btn btn-danger" id="btn-ug-del-confirm">🗑 Delete Group</button>
     </div>
   </div>
 </div>

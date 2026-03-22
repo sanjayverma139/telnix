@@ -5,6 +5,7 @@ import { $ } from './utils.js';
 const PAGE_LOADERS = {
   logs:            () => import('./logs.js').then(m => m.loadLogs()),
   users:           () => import('./users.js').then(m => m.loadUsers()),
+  usergroups:      () => import('./usergroups.js').then(m => m.loadUserGroups()),
   bypass:          () => import('./bypass.js').then(m => m.loadBypass()),
   urllists:        () => import('./urllists.js').then(m => m.renderUL()),
   filetypes:       () => import('./filetypes.js').then(m => m.renderFT()),
