@@ -280,14 +280,14 @@ function renderCalendar() {
     if (ds === calFrom) cls += ' selected-start';
     if (ds === calTo)   cls += ' selected-end';
     if (calFrom && calTo && ds > calFrom && ds < calTo) cls += ' in-range';
-    cells += `<div class="${cls}" data-date="${ds}" onclick="window._calClick('${ds}')" onmouseenter="window._calHover('${ds}')">${d}</div>`;
+    cells += `<div class="${cls}" data-date="${ds}" onclick="event.stopPropagation();window._calClick('${ds}')" onmouseenter="window._calHover('${ds}')">${d}</div>`;
   }
 
   cont.innerHTML = `
     <div class="cal-header">
-      <button class="cal-nav" onclick="window._calNav(-1)">‹</button>
+      <button class="cal-nav" onclick="event.stopPropagation();window._calNav(-1)">‹</button>
       <span class="cal-month">${months[calMonth]} ${calYear}</span>
-      <button class="cal-nav" onclick="window._calNav(1)">›</button>
+      <button class="cal-nav" onclick="event.stopPropagation();window._calNav(1)">›</button>
     </div>
     <div class="cal-grid">
       ${days.map(d=>`<div class="cal-day-hdr">${d}</div>`).join('')}
@@ -422,9 +422,9 @@ export function initLogs() {
     else { if(wrap) wrap.style.display='none'; }
   }));
 
-  // Close panels on outside click
+  // Close panels on outside click — but NOT when clicking inside a panel or its button
   document.addEventListener('click', e => {
-    if (!e.target.closest('.log-filter-btn-wrap') && !e.target.closest('.log-filter-btn')) {
+    if (!e.target.closest('.log-filter-btn-wrap')) {
       document.querySelectorAll('.filter-panel').forEach(p => p.classList.remove('open'));
     }
     if (e.target.closest('#inv-close') || e.target.id==='inv-overlay') {
