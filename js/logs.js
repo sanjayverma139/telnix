@@ -393,6 +393,22 @@ function openInvestigation(idx) {
   });
 }
 
+// ── Compatibility export for dashboard.js ────────────────────────────────────
+export function addLogFilter(type, val, label) {
+  // Map old single-value filter calls to new multi-value system
+  if (type === 'action')    { activeFilters.action   = [val]; }
+  else if (type === 'activity')  { activeFilters.activity = [val]; }
+  else if (type === 'proceeded') { activeFilters.threat   = ['proceeded']; }
+  else if (type === 'userEmail') { activeFilters.user     = [val]; }
+  else if (type === 'today')     { activeFilters.date = { from: (() => { const m=new Date(); m.setHours(0,0,0,0); return m.getTime(); })(), to: Date.now(), label: 'Today' }; }
+  else if (type === 'last7')     { activeFilters.date = { from: Date.now()-7*86400000,  to: Date.now(), label: 'Last 7 days'  }; }
+  else if (type === 'last30')    { activeFilters.date = { from: Date.now()-30*86400000, to: Date.now(), label: 'Last 30 days' }; }
+  currentPage = 0;
+  updateFilterBtnStates();
+  renderFilterChips();
+  loadLogs();
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 export function initLogs() {
   $('log-search')?.addEventListener('input', () => { currentPage=0; renderFilterChips(); loadLogs(); });
