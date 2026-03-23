@@ -349,6 +349,14 @@ export function filterByUser(email) {
 
 // ── Investigation Panel ───────────────────────────────────────────────────────
 function openInvestigation(idx) {
+  // Helper: format bytes into human readable
+  function formatBytes(b) {
+    if (!b || b === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B','KB','MB','GB'];
+    const i = Math.floor(Math.log(b) / Math.log(k));
+    return parseFloat((b / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
   import('./state.js').then(({ allLogs }) => {
     const l = allLogs[idx]; if (!l) return;
     const panel=document.getElementById('inv-panel');
@@ -377,6 +385,17 @@ function openInvestigation(idx) {
       ${row('Category',l.category||'—')}
       ${l.download_filename?row('File',l.download_filename,'#fbbf24'):''}
       ${l.proceeded?row('Bypassed Warning','Yes','#a78bfa'):''}
+      ${(l.activity==='xhr'||l.activity==='upload')?`
+        <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px">📡 Request Details</div>
+        ${l.xhr_method||l.xhrMethod    ? row('Method',      l.xhr_method||l.xhrMethod,                                                          '#60a5fa') : ''}
+        ${l.xhr_risk||l.xhrRisk        ? row('Risk',        (l.xhr_risk||l.xhrRisk||'').toUpperCase(),
+            (l.xhr_risk||l.xhrRisk)==='high'?'#f87171':(l.xhr_risk||l.xhrRisk)==='medium'?'#fbbf24':'#10b981') : ''}
+        ${l.initiator                  ? row('Initiator',   l.initiator,                                                                         '#94a3b8') : ''}
+        ${l.xhr_content_type||l.xhrContentType ? row('Content-Type', l.xhr_content_type||l.xhrContentType,                                      '#94a3b8') : ''}
+        ${l.xhr_size||l.xhrSize        ? row('Size',        formatBytes(l.xhr_size||l.xhrSize||0),                                               '#94a3b8') : ''}
+        ${l.xhr_has_file||l.xhrHasFile ? row('File Upload', '⚠️ Yes — file detected in request body',                                          '#f87171') : ''}
+        ${l.page_domain||l.pageDomain  ? row('Page Domain', l.page_domain||l.pageDomain,                                                         '#64748b') : ''}
+      `:''}
       ${score!=null?`
         <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px">🛡 Threat Intelligence</div>
         <div style="background:${sc}0d;border:1px solid ${sc}33;border-radius:10px;padding:14px;margin-bottom:10px">
