@@ -72,10 +72,20 @@ function renderLogTable(logs) {
     const score = l.threat_score;
     const sc = score >= 55 ? '#ef4444' : score >= 30 ? '#f59e0b' : '#10b981';
     const sd = score != null ? `<span style="font-weight:700;color:${sc}">${score}</span>` : '—';
-    return `<tr>
+      const path = (() => {
+        try {
+          const u = new URL(l.url || '');
+          const p = u.pathname + u.search;
+          return p && p !== '/' ? p.slice(0, 60) + (p.length > 60 ? '…' : '') : '';
+        } catch { return ''; }
+      })();
+      return `<tr>
       <td style="color:#64748b;font-size:11px;white-space:nowrap">${fmt(l.ts)}</td>
       <td style="color:#a5b4fc;font-size:11px">${esc(l.user_email||'—')}</td>
-      <td style="font-weight:600;font-size:12px">${esc(l.domain||'—')}</td>
+      <td style="font-size:12px">
+        <div style="font-weight:600">${esc(l.domain||'—')}</div>
+        ${path ? `<div style="font-size:10px;color:#475569;margin-top:1px">${esc(path)}</div>` : ''}
+      </td>
       <td><span class="badge badge-${l.activity||'browse'}">${l.activity||'browse'}</span></td>
       <td><span class="badge badge-${l.action}">${l.action}</span></td>
       <td style="font-size:11px;color:#64748b">${esc(l.category||'—')}</td>
