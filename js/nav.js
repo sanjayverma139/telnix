@@ -13,6 +13,7 @@ const PAGE_LOADERS = {
   categoryPolicies:() => import('./categoryPolicies.js').then(m => m.renderCategoryPolicies()),
   policies:        () => import('./policies.js').then(m => m.renderPols()),
   config:          () => import('./configPage.js').then(m => m.loadConfigPage()),
+  noise:           () => window._renderNoise?.(),
 };
 
 export function initNav() {
