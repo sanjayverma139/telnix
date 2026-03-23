@@ -70,7 +70,11 @@ export async function fetchLogs(filters = {}, page = 0) {
   else if (filters.users?.length > 1) url += `&user_email=in.(${filters.users.map(u=>`"${u}"`).join(',')})`;
 
   // Count total
-  const countRes = await sbf(url + `&select=count`, { headers: { 'Prefer': 'count=exact' } });
+  // Get total count — use head=true with count=exact
+  const countRes = await sbf(url, {
+    method: 'HEAD',
+    headers: { 'Prefer': 'count=exact' }
+  });
   const totalCount = parseInt(countRes.headers?.get?.('content-range')?.split('/')?.[1] || '0', 10) || 0;
 
   // Fetch page
