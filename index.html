@@ -59,6 +59,7 @@
     <div class="nav" data-page="bypass">🔑 Bypass Codes</div>
     <div class="sb-section">Tools</div>
     <div class="nav" data-page="urltester">🔍 URL Tester</div>
+    <div class="nav" data-page="noise">🔇 Noise Filter</div>
     <div class="nav" data-page="config">⚙️ Configuration</div>
     <div class="sb-footer">
       <div class="sb-user" id="adm-email-lbl"></div>
@@ -434,6 +435,41 @@
         </div>
         <div style="font-size:11px;color:#475569;margin-bottom:14px">Leave both blank to test global policy. Fill in user or group to see which policies apply specifically to them.</div>
         <div id="tu-res" style="margin-top:4px"></div>
+      </div>
+    </div>
+
+    <!-- Noise Filter -->
+    <div class="page" id="page-noise">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Noise Filter</div>
+          <div class="page-sub">Domains added here will be ignored by the XHR interceptor — no logs generated for requests to these domains</div>
+        </div>
+        <button class="btn btn-success btn-sm" id="btn-push-noise">☁ Push to Users</button>
+      </div>
+      <div class="alert" id="noise-alert"></div>
+      <div class="card">
+        <div class="card-title">Add Domain to Noise Filter</div>
+        <div style="display:flex;gap:10px;align-items:flex-end">
+          <div style="flex:1">
+            <label>Domain (e.g. usercentrics.eu — all subdomains are also filtered)</label>
+            <input type="text" id="noise-input" placeholder="example.com" style="margin:0" onkeydown="if(event.key==='Enter')window._addNoise()">
+          </div>
+          <button class="btn btn-primary" onclick="window._addNoise()" style="margin-bottom:0;flex-shrink:0">+ Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Custom Noise Domains <span id="noise-count" style="font-size:11px;color:#64748b;font-weight:400"></span></div>
+        <div id="noise-list"><div class="loading">No custom domains added yet</div></div>
+      </div>
+      <div class="card" style="background:rgba(99,102,241,.04);border-color:rgba(99,102,241,.15)">
+        <div class="card-title" style="color:#64748b;font-size:12px">Built-in noise domains (always filtered, not editable)</div>
+        <div style="font-size:11px;color:#475569;font-family:monospace;line-height:2">
+          google.com · gstatic.com · googleapis.com · doubleclick.net · facebook.com · fbcdn.net ·
+          akamaized.net · cloudfront.net · fastly.net · cloudflare.com · youtube.com · ytimg.com ·
+          microsoft.com · amazon.com · amazonaws.com · twitter.com · apple.com · icloud.com ·
+          supabase.co · github.io · github.com
+        </div>
       </div>
     </div>
 

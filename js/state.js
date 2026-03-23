@@ -11,6 +11,7 @@ export const D = {
   policySettings:           { defaultAction: 'allow' },
   fileTypeLists:            [],
   bypassTokens:             [],
+  noiseDomains:             [],
   categoryPolicies:         {},
   agentConfig:              {},
 };
