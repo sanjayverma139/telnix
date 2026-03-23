@@ -425,6 +425,83 @@ export function addLogFilter(type, val, label) {
   loadLogs();
 }
 
+// ── Supabase Realtime sync ────────────────────────────────────────────────────
+let realtimeChannel = null;
+
+function initRealtimeSync() {
+  if (realtimeChannel) return; // already connected
+
+  try {
+    // Use native WebSocket — no Supabase JS SDK needed
+    const wsUrl = `wss://nsauxvxopajdsgglcvpk.supabase.co/realtime/v1/websocket?apikey=${ANON}&vsn=1.0.0`;
+    const ws    = new WebSocket(wsUrl);
+    realtimeChannel = ws;
+
+    ws.onopen = () => {
+      // Join the activity_logs channel — filter by org_id
+      ws.send(JSON.stringify({
+        topic:   'realtime:public:activity_logs',
+        event:   'phx_join',
+        payload: { config: { postgres_changes: [{ event: 'UPDATE', schema: 'public', table: 'activity_logs', filter: `org_id=eq.${ORG}` }] } },
+        ref:     '1',
+      }));
+      console.log('[Telnix Admin] Realtime connected');
+    };
+
+    ws.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+
+        // Heartbeat — reply to keep connection alive
+        if (msg.event === 'phx_reply' && msg.ref === '1') return;
+        if (msg.event === 'heartbeat') {
+          ws.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: '2' }));
+          return;
+        }
+
+        // Postgres change event — a row was updated
+        if (msg.event === 'postgres_changes') {
+          const record = msg.payload?.data?.record;
+          if (!record) return;
+
+          // Update filename in the displayed table row if it's visible
+          const localId = record.local_id;
+          const filename = record.download_filename;
+          if (!localId || !filename) return;
+
+          // Find the row in current allLogs and update it
+          import('./state.js').then(({ allLogs }) => {
+            const idx = allLogs.findIndex(l => l.local_id === localId);
+            if (idx !== -1) {
+              allLogs[idx].download_filename = filename;
+              // Update just that cell in the table — no full reload
+              const rows = document.querySelectorAll('#logs-tb tr');
+              if (rows[idx]) {
+                // File column is not in table — update investigation panel if open
+                // Reload current page data silently
+                loadLogs();
+              }
+            }
+          }).catch(() => {});
+        }
+      } catch (_e) {}
+    };
+
+    ws.onclose = () => {
+      realtimeChannel = null;
+      console.log('[Telnix Admin] Realtime disconnected — reconnecting in 5s');
+      setTimeout(initRealtimeSync, 5000); // auto-reconnect
+    };
+
+    ws.onerror = () => {
+      // Error handled by onclose
+    };
+
+  } catch (_e) {
+    console.warn('[Telnix Admin] Realtime setup failed:', _e.message);
+  }
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 export function initLogs() {
   $('log-search')?.addEventListener('input', () => { currentPage=0; renderFilterChips(); loadLogs(); });
@@ -464,4 +541,7 @@ export function initLogs() {
   window._calClick = calClick;
   window._calHover = calHover;
   window._calNav   = calNav;
+
+  // Start Supabase Realtime for live filename updates
+  initRealtimeSync();
 }
