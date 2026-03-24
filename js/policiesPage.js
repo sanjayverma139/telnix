@@ -36,7 +36,9 @@ renderAppShell({
         <span id="pol-match-count" style="display:none;font-size:12px;color:#a5b4fc;white-space:nowrap"></span>
       </div>
       <div id="pol-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;min-height:0"></div>
-      <div id="pol-con"><div class="loading">Loading...</div></div>
+      <div class="policy-board-shell">
+        <div id="pol-con"><div class="loading">Loading...</div></div>
+      </div>
     </div>
   `,
   extraMarkup: `
