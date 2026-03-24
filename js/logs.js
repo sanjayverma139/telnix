@@ -6,6 +6,8 @@ import { setAllLogs, allLogs } from './state.js';
 import { showPage }           from './nav.js';
 import { SB, ANON, ORG, SVC } from './config.js';
 
+const LOGS_FILTER_KEY = 'telnix_logs_filter_v1';
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let currentPage  = 0;
 let totalLogs    = 0;
@@ -354,7 +356,8 @@ export function filterByUser(email) {
   activeFilters.user = [email];
   updateFilterBtnStates();
   renderFilterChips();
-  showPage('logs');
+  if ($('page-logs')) showPage('logs');
+  else loadLogs();
 }
 
 // ── Investigation Panel ───────────────────────────────────────────────────────
@@ -554,4 +557,25 @@ export function initLogs() {
 
   // Start Supabase Realtime for live filename updates
   initRealtimeSync();
+  if (!applyPendingNavigationFilter()) loadLogs();
+}
+
+function applyPendingNavigationFilter() {
+  let raw = null;
+  try {
+    raw = sessionStorage.getItem(LOGS_FILTER_KEY);
+  } catch {}
+  if (!raw) return false;
+
+  try {
+    const { type, val, label } = JSON.parse(raw);
+    addLogFilter(type, val, label);
+  } catch {
+    return false;
+  }
+
+  try {
+    sessionStorage.removeItem(LOGS_FILTER_KEY);
+  } catch {}
+  return true;
 }

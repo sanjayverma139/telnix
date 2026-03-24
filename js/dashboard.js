@@ -5,6 +5,8 @@ import { fetchDashStats } from './api.js';
 import { CAT_COLORS }     from './config.js';
 import { showPage }       from './nav.js';
 
+const LOGS_FILTER_KEY = 'telnix_logs_filter_v1';
+
 export async function loadDash() {
   $('dash-tb').innerHTML = '<tr><td colspan="6" class="loading">Loading...</td></tr>';
   const logs = await fetchDashStats();
@@ -65,14 +67,18 @@ export function initDashboard() {
 
   // Clickable stat cards → filtered log view
   document.querySelectorAll('.dash-stat[data-filter]').forEach(card => {
-    card.addEventListener('click', async () => {
+    card.addEventListener('click', () => {
       const f = card.dataset.filter;
-      const { addLogFilter } = await import('./logs.js');
-      if (f === 'block') { addLogFilter('action','block','Action = Block'); }
-      else if (f === 'warn') { addLogFilter('action','warn','Action = Warn'); }
-      else if (f === 'allow') { addLogFilter('action','allow','Action = Allow'); }
-      else if (f === 'bypassed') { addLogFilter('proceeded','true','User Bypassed Warning'); }
-      showPage('logs');
+      let payload = null;
+      if (f === 'block') payload = { type: 'action', val: 'block', label: 'Action = Block' };
+      else if (f === 'warn') payload = { type: 'action', val: 'warn', label: 'Action = Warn' };
+      else if (f === 'allow') payload = { type: 'action', val: 'allow', label: 'Action = Allow' };
+      else if (f === 'bypassed') payload = { type: 'proceeded', val: 'true', label: 'User Bypassed Warning' };
+      if (!payload) return;
+
+      sessionStorage.setItem(LOGS_FILTER_KEY, JSON.stringify(payload));
+      if ($('page-logs')) showPage('logs');
+      else location.href = './logs.html';
     });
   });
 
