@@ -41,7 +41,7 @@ renderAppShell({
         <div style="margin-bottom:14px"><label>Predefined Categories</label><div id="cc-pred-cats-wrap"></div></div>
         <div style="margin-bottom:14px"><label>URL Lists (Included)</label><div id="cc-url-lists-wrap"></div></div>
         <div style="margin-bottom:14px"><label>Domains (one per line, optional)</label><textarea id="cc-domains" rows="3" placeholder="domain1.com&#10;domain2.com"></textarea></div>
-        <div style="background:#0a1120;border:1px solid rgba(239,68,68,.15);border-radius:10px;padding:14px;margin-bottom:14px">
+        <div class="category-exclusions-panel">
           <div style="font-size:10px;font-weight:700;color:#f87171;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">Exclusions</div>
           <label style="color:#94a3b8;font-size:10px;margin-bottom:6px">Exclude URL Lists</label>
           <div id="cc-excl-lists-wrap" style="margin-bottom:12px"></div>

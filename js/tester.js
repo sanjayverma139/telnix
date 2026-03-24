@@ -48,6 +48,12 @@ function getConditionSummary(pol) {
 
 
 export function testUrl() {
+  const isLight = document.body.classList.contains('light-theme');
+  const textColor = isLight ? '#142033' : '#e2e8f0';
+  const mutedColor = isLight ? '#64748b' : '#94a3b8';
+  const softColor = isLight ? '#526173' : '#475569';
+  const listCardBg = isLight ? '#ffffff' : '#0d1424';
+  const listCardBorder = isLight ? 'rgba(15,23,42,.1)' : 'rgba(255,255,255,.06)';
   const input     = $('tu-url')?.value.trim();
   const userInput = ($('tu-user')?.value || '').trim().toLowerCase();
   const groupId   = $('tu-group')?.value || '';
@@ -199,7 +205,7 @@ export function testUrl() {
       });
       parts.push(`Member of: <strong style="color:#818cf8">${names.join(', ')}</strong>`);
     }
-    contextBanner = `<div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:#94a3b8;margin-bottom:14px">
+    contextBanner = `<div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:${mutedColor};margin-bottom:14px">
       🎯 Evaluating for — ${parts.join(' · ')}
     </div>`;
   }
@@ -211,25 +217,25 @@ export function testUrl() {
         <span style="font-size:28px">${action==='block'?'🚫':action==='warn'?'⚠️':'✅'}</span>
         <div>
           <div style="font-size:16px;font-weight:800;color:${col};text-transform:uppercase">${action}</div>
-          <div style="font-size:12px;color:#94a3b8">${esc(domain)}</div>
+          <div style="font-size:12px;color:${mutedColor}">${esc(domain)}</div>
         </div>
       </div>
       ${firstMatch
-        ? `<div style="font-size:12px;color:#e2e8f0">
+        ? `<div style="font-size:12px;color:${textColor}">
              <strong style="color:#a5b4fc">Policy #${firstMatch.rank}:</strong> ${esc(firstMatch.pol.name)}
-             <span style="color:#475569"> in </span>${esc(firstMatch.grp.name)}
+             <span style="color:${softColor}"> in </span>${esc(firstMatch.grp.name)}
            </div>
-           <div style="font-size:11px;color:#64748b;margin-top:4px">✓ ${esc(results.find(r=>r.pol.id===firstMatch.pol.id)?.matchReason||'')}</div>`
-        : `<div style="font-size:12px;color:#64748b">No policy matched → default: <strong style="color:${col}">${def}</strong></div>`}
-      <div style="font-size:11px;color:#475569;margin-top:8px">Auto-category: <strong style="color:#818cf8">${esc(autoCat)}</strong></div>
+           <div style="font-size:11px;color:${mutedColor};margin-top:4px">✓ ${esc(results.find(r=>r.pol.id===firstMatch.pol.id)?.matchReason||'')}</div>`
+        : `<div style="font-size:12px;color:${mutedColor}">No policy matched → default: <strong style="color:${col}">${def}</strong></div>`}
+      <div style="font-size:11px;color:${softColor};margin-top:8px">Auto-category: <strong style="color:#818cf8">${esc(autoCat)}</strong></div>
     </div>`;
 
   // URL Lists
   if (matchedLists.length) {
     html += `<div style="margin-bottom:16px">
-      <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">📋 Found in URL Lists</div>
+      <div style="font-size:10px;font-weight:700;color:${softColor};text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">📋 Found in URL Lists</div>
       ${matchedLists.map(l => `
-        <div style="background:#0d1424;border:1px solid rgba(96,165,250,.2);border-radius:8px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+        <div style="background:${listCardBg};border:1px solid rgba(96,165,250,.2);border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;box-shadow:${isLight ? '0 8px 18px rgba(15,23,42,.05)' : 'none'}">
           <span style="font-size:13px;font-weight:600;color:#60a5fa">${esc(l.name)}</span>
           <span style="font-size:11px;color:#475569">${(l.domains||[]).length} domains</span>
         </div>`).join('')}
@@ -238,7 +244,7 @@ export function testUrl() {
 
   // All policies in evaluation order
   html += `<div>
-    <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">🛡 All Policies (evaluation order)</div>
+    <div style="font-size:10px;font-weight:700;color:${softColor};text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">🛡 All Policies (evaluation order)</div>
     ${results.map((r, i) => {
       const ac = AC[r.pol.action] || '#94a3b8';
       const isFirst = firstMatch && r.pol.id === firstMatch.pol.id;
@@ -249,18 +255,18 @@ export function testUrl() {
       let statusBadge = '';
       if (isFirst)            statusBadge = '<span style="font-size:9px;font-weight:700;color:#10b981;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:4px;padding:2px 6px">HITS FIRST</span>';
       else if (r.hit && !isFirst) statusBadge = '<span style="font-size:9px;font-weight:700;color:#6366f1;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:4px;padding:2px 6px">ALSO MATCHES</span>';
-      else if (!r.hit)        statusBadge = '<span style="font-size:9px;font-weight:700;color:#475569;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:4px;padding:2px 6px">NO MATCH</span>';
+      else if (!r.hit)        statusBadge = `<span style="font-size:9px;font-weight:700;color:${softColor};background:${isLight?'rgba(15,23,42,.04)':'rgba(255,255,255,.03)'};border:1px solid ${isLight?'rgba(15,23,42,.08)':'rgba(255,255,255,.06)'};border-radius:4px;padding:2px 6px">NO MATCH</span>`;
 
-      return `<div style="background:#0d1424;border:1px solid ${borderColor};border-radius:8px;padding:10px 14px;margin-bottom:6px">
+      return `<div style="background:${listCardBg};border:1px solid ${isFirst ? borderColor : listCardBorder};border-radius:10px;padding:10px 14px;margin-bottom:6px;box-shadow:${isLight ? '0 8px 18px rgba(15,23,42,.05)' : 'none'}">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;font-weight:700;color:#475569;width:22px;flex-shrink:0">#${r.rank}</span>
+          <span style="font-size:11px;font-weight:700;color:${softColor};width:22px;flex-shrink:0">#${r.rank}</span>
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:700;color:#e2e8f0">${esc(r.pol.name)}</div>
+            <div style="font-size:13px;font-weight:800;color:${textColor}">${esc(r.pol.name)}</div>
             <div style="font-size:11px;color:#64748b">${esc(r.grp.name)} · ${r.pol.type}
               ${r.pol.source?.users?.length||r.pol.source?.groups?.length
                 ? `<span style="color:#f59e0b"> · 👤 source-filtered</span>` : ''}
             </div>
-            <div style="font-size:11px;color:#475569;margin-top:3px">${getConditionSummary(r.pol)}</div>
+            <div style="font-size:11px;color:${softColor};margin-top:3px">${getConditionSummary(r.pol)}</div>
             ${r.hit && r.matchReason ? `<div style="font-size:11px;color:#4ade80;margin-top:2px">✓ ${esc(r.matchReason)}</div>` : ''}
             ${r.sourceSkip && r.sourceNote ? `<div style="font-size:11px;color:#f59e0b;margin-top:2px">⚠ ${esc(r.sourceNote)}</div>` : ''}
           </div>

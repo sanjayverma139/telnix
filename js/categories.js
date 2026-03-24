@@ -71,7 +71,8 @@ function buildSearchableDropdown(containerId, allItems, selectedIds) {
 
   const searchInput = document.createElement('input');
   searchInput.placeholder = 'Search and select...';
-  searchInput.style.cssText = 'background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;min-width:80px;flex:1;margin:0';
+  searchInput.className = 'search-chip-field';
+  searchInput.style.cssText = 'background:transparent;border:none;outline:none;font-size:12px;min-width:80px;flex:1;margin:0';
 
   const dd = document.createElement('div');
   dd.className = 'search-chip-dd';

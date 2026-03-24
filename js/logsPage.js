@@ -99,9 +99,9 @@ renderAppShell({
   extraMarkup: `
     <div id="inv-overlay"></div>
     <div id="inv-panel">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06);position:sticky;top:0;background:#0b1120;z-index:2">
-        <div style="font-size:14px;font-weight:800;color:#e2e8f0">Investigation Detail</div>
-        <button id="inv-close" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-weight:600">Close</button>
+      <div class="inv-panel-head">
+        <div class="inv-panel-title">Investigation Detail</div>
+        <button id="inv-close">Close</button>
       </div>
       <div id="inv-content" style="padding:16px 20px"></div>
     </div>

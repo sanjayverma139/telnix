@@ -374,17 +374,22 @@ function openInvestigation(idx) {
     const panel=document.getElementById('inv-panel');
     const content=document.getElementById('inv-content');
     if(!panel||!content) return;
+    const isLight=document.body.classList.contains('light-theme');
+    const textCol=isLight?'#142033':'#e2e8f0';
+    const mutedCol=isLight?'#64748b':'#94a3b8';
+    const lineCol=isLight?'rgba(15,23,42,.08)':'rgba(255,255,255,.04)';
+    const sectionCol=isLight?'#526173':'#475569';
     const score=l.threat_score;
     const sc=score>=55?'#ef4444':score>=30?'#f59e0b':'#10b981';
     const sl=score>=55?'HIGH RISK':score>=30?'MEDIUM RISK':'CLEAN';
-    function row(label,val,color){return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:11px;color:#64748b;flex-shrink:0;margin-right:12px">${label}</span><span style="font-size:12px;color:${color||'#e2e8f0'};text-align:right;word-break:break-all">${val}</span></div>`;}
+    function row(label,val,color){return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid ${lineCol}"><span style="font-size:11px;color:${mutedCol};flex-shrink:0;margin-right:12px;font-weight:600">${label}</span><span style="font-size:12px;color:${color||textCol};text-align:right;word-break:break-all;font-weight:600">${val}</span></div>`;}
     content.innerHTML=`
       <div style="margin-bottom:20px">
-        <div style="font-size:18px;font-weight:800;color:#e2e8f0;margin-bottom:4px">${esc(l.domain||'—')}</div>
+        <div style="font-size:20px;font-weight:900;color:${textCol};margin-bottom:4px">${esc(l.domain||'—')}</div>
         <span class="badge badge-${l.action}" style="font-size:12px;padding:4px 12px">${(l.action||'').toUpperCase()}</span>
         ${l.proceeded?'<span class="badge" style="background:rgba(139,92,246,.15);color:#a78bfa;margin-left:6px">BYPASSED</span>':''}
       </div>
-      <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Event Details</div>
+      <div style="font-size:10px;font-weight:800;color:${sectionCol};text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Event Details</div>
       ${row('Timestamp',new Date(l.ts).toISOString())}
       ${row('Local Time',fmtF(l.ts))}
       ${row('User',l.user_email||'—','#a5b4fc')}
@@ -398,7 +403,7 @@ function openInvestigation(idx) {
       ${l.download_filename?row('File',l.download_filename,'#fbbf24'):''}
       ${l.proceeded?row('Bypassed Warning','Yes','#a78bfa'):''}
       ${(l.activity==='xhr'||l.activity==='upload')?`
-        <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px">📡 Request Details</div>
+        <div style="font-size:10px;font-weight:800;color:${sectionCol};text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px">📡 Request Details</div>
         ${l.xhr_method||l.xhrMethod    ? row('Method',      l.xhr_method||l.xhrMethod,                                                          '#60a5fa') : ''}
         ${l.xhr_risk||l.xhrRisk        ? row('Risk',        (l.xhr_risk||l.xhrRisk||'').toUpperCase(),
             (l.xhr_risk||l.xhrRisk)==='high'?'#f87171':(l.xhr_risk||l.xhrRisk)==='medium'?'#fbbf24':'#10b981') : ''}
@@ -409,10 +414,10 @@ function openInvestigation(idx) {
         ${l.page_domain||l.pageDomain  ? row('Page Domain', l.page_domain||l.pageDomain,                                                         '#64748b') : ''}
       `:''}
       ${score!=null?`
-        <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px">🛡 Threat Intelligence</div>
+        <div style="font-size:10px;font-weight:800;color:${sectionCol};text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px">🛡 Threat Intelligence</div>
         <div style="background:${sc}0d;border:1px solid ${sc}33;border-radius:10px;padding:14px;margin-bottom:10px">
           <div style="display:flex;align-items:center;gap:14px">
-            <div style="text-align:center"><div style="font-size:32px;font-weight:900;color:${sc};line-height:1">${score}</div><div style="font-size:9px;color:#64748b">/100</div></div>
+            <div style="text-align:center"><div style="font-size:32px;font-weight:900;color:${sc};line-height:1">${score}</div><div style="font-size:9px;color:${mutedCol}">/100</div></div>
             <div><div style="font-size:13px;font-weight:700;color:${sc}">${sl}</div>${l.known_malicious?'<div style="font-size:11px;color:#f87171;margin-top:2px">⚠ Known Malicious Site</div>':''}</div>
           </div>
         </div>`:''}`;

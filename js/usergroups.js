@@ -137,7 +137,9 @@ async function buildMemberDropdown() {
   dd.innerHTML = filtered.length
     ? filtered.map(email => {
         const isSel = _memberEmails.has(email);
-        return `<div data-email="${esc(email)}" style="display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;font-size:12px;color:${isSel?'#a5b4fc':'#cbd5e1'};background:${isSel?'rgba(99,102,241,.1)':'transparent'}">
+        const itemColor = document.body.classList.contains('light-theme') ? (isSel ? '#2f3fbd' : '#334155') : (isSel ? '#a5b4fc' : '#cbd5e1');
+        const itemBg = document.body.classList.contains('light-theme') ? (isSel ? 'rgba(79,70,229,.08)' : 'transparent') : (isSel ? 'rgba(99,102,241,.1)' : 'transparent');
+        return `<div data-email="${esc(email)}" style="display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;font-size:12px;color:${itemColor};background:${itemBg}">
           <input type="checkbox" ${isSel?'checked':''} style="accent-color:#6366f1;margin:0;width:14px;height:14px;flex-shrink:0">
           <span>${esc(email)}</span>
         </div>`;

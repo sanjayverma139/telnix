@@ -17,7 +17,7 @@ function renderNoise() {
     return;
   }
   list.innerHTML = domains.map((d, i) => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#060d1a;border:1px solid rgba(255,255,255,.06);border-radius:8px;margin-bottom:6px">
+    <div class="noise-domain-row">
       <div>
         <span style="font-size:13px;font-weight:600;color:#e2e8f0;font-family:monospace">${esc(d)}</span>
         <span style="font-size:11px;color:#475569;margin-left:10px">+ all subdomains</span>
