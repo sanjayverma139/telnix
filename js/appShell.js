@@ -35,6 +35,7 @@ function applyTheme(theme) {
   if (!btn) return;
   btn.setAttribute('aria-pressed', String(theme === 'light'));
   btn.setAttribute('title', theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme');
+  btn.classList.toggle('is-light', theme === 'light');
   const sun = btn.querySelector('.theme-icon-sun');
   const moon = btn.querySelector('.theme-icon-moon');
   if (sun) sun.style.opacity = theme === 'light' ? '1' : '.45';
@@ -71,6 +72,7 @@ export function renderAppShell({ activeKey, content, extraMarkup = '' }) {
         <div class="sb-logo">
           <div class="sb-logo-brand"><div class="logo-icon">T</div><div class="logo-name">TELNIX</div></div>
           <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle theme">
+            <span class="theme-toggle-thumb" aria-hidden="true"></span>
             <span class="theme-icon theme-icon-sun">☀</span>
             <span class="theme-icon theme-icon-moon">☾</span>
           </button>
