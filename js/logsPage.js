@@ -13,9 +13,9 @@ renderAppShell({
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:6px;background:#060d1a;border:1px solid rgba(99,102,241,.3);border-radius:8px;padding:6px 10px;flex:1;max-width:25%">
-          <span style="color:#64748b;font-size:13px;flex-shrink:0">Search</span>
-          <input type="text" id="log-search" placeholder="Search domain, user, URL..." style="background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;width:100%;min-width:0;margin:0">
+        <div class="toolbar-search compact" style="max-width:25%">
+          <span class="toolbar-search-icon">Search</span>
+          <input type="text" id="log-search" class="toolbar-search-input" placeholder="Search domain, user, URL...">
         </div>
         <button class="btn btn-success btn-sm" id="btn-export-csv" style="margin-left:auto">Export CSV</button>
       </div>

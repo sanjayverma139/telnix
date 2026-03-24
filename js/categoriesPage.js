@@ -20,11 +20,11 @@ renderAppShell({
       </div>
       <div class="alert" id="cc-alert"></div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
-        <div style="display:flex;align-items:center;gap:6px;background:#060d1a;border:1px solid rgba(99,102,241,.3);border-radius:8px;padding:6px 10px;flex:1">
-          <span style="color:#64748b">Search</span>
-          <input type="text" id="cat-search" placeholder="Search..." style="background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;width:100%;margin:0">
+        <div class="toolbar-search compact">
+          <span class="toolbar-search-icon">Search</span>
+          <input type="text" id="cat-search" class="toolbar-search-input" placeholder="Search...">
         </div>
-        <span id="custom-cat-count" style="font-size:12px;color:#64748b;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:5px 14px;white-space:nowrap"></span>
+        <span id="custom-cat-count" class="soft-count"></span>
       </div>
       <div id="cat-con"><div class="loading">Loading...</div></div>
     </div>

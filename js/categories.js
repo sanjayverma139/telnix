@@ -63,7 +63,7 @@ function buildSearchableDropdown(containerId, allItems, selectedIds) {
   wrap.style.cssText = 'position:relative;margin-bottom:12px';
 
   const inputRow = document.createElement('div');
-  inputRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:6px 10px;background:#060d1a;border:1.5px solid rgba(99,102,241,.2);border-radius:8px;min-height:38px;cursor:text;transition:border-color .15s';
+  inputRow.className = 'search-chip-input';
   inputRow.addEventListener('focus', ()=>inputRow.style.borderColor='rgba(99,102,241,.6)', true);
 
   const chipsWrap = document.createElement('div');
@@ -74,7 +74,8 @@ function buildSearchableDropdown(containerId, allItems, selectedIds) {
   searchInput.style.cssText = 'background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;min-width:80px;flex:1;margin:0';
 
   const dd = document.createElement('div');
-  dd.style.cssText = 'display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#0d1424;border:1px solid rgba(99,102,241,.3);border-radius:10px;max-height:200px;overflow-y:auto;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.6)';
+  dd.className = 'search-chip-dd';
+  dd.style.maxHeight = '200px';
 
   let selected = new Set(selectedIds || []);
 
@@ -84,7 +85,7 @@ function buildSearchableDropdown(containerId, allItems, selectedIds) {
       const item  = allItems.find(x => (x.id||x) === id);
       const label = item?.name || item?.label || id;
       const chip  = document.createElement('div');
-      chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:rgba(99,102,241,.15);color:#a5b4fc;border:1px solid rgba(99,102,241,.3)';
+      chip.className = 'search-chip';
       chip.innerHTML = `${esc(label)}<button style="background:none;border:none;color:#a5b4fc;cursor:pointer;font-size:11px;padding:0 0 0 2px;line-height:1">✕</button>`;
       chip.querySelector('button').addEventListener('click', e => {
         e.stopPropagation(); selected.delete(id); renderChips(); renderDd(searchInput.value);

@@ -21,7 +21,7 @@ export function renderCategoryPolicies() {
         <span style="font-size:12px;font-weight:700;color:${color}">${cat}</span>
       </div>
       <select data-cat="${cat}" onchange="window._setCatPolicy('${cat}',this.value)"
-        style="width:100%;padding:6px 10px;background:#060d1a;border:1px solid ${color}44;border-radius:6px;color:#e2e8f0;font-size:12px">
+        style="width:100%;padding:6px 10px;border:1px solid ${color}44;border-radius:6px;font-size:12px">
         ${opts}
       </select>
     </div>`;

@@ -27,9 +27,9 @@ renderAppShell({
       <div class="alert" id="pol-al"></div>
       <div id="pol-stat-chips" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-        <div style="display:flex;align-items:center;gap:8px;background:#060d1a;border:1px solid rgba(99,102,241,.3);border-radius:8px;padding:7px 12px;flex:1">
-          <span style="color:#64748b;font-size:14px;flex-shrink:0">Search</span>
-          <input type="text" id="pol-search" placeholder="Search policy name..." style="background:transparent;border:none;outline:none;color:#e2e8f0;font-size:13px;width:100%;margin:0">
+        <div class="toolbar-search">
+          <span class="toolbar-search-icon" style="font-size:14px">Search</span>
+          <input type="text" id="pol-search" class="toolbar-search-input policy" placeholder="Search policy name...">
         </div>
         <button id="btn-pol-filter" class="btn btn-ghost btn-sm" style="white-space:nowrap">ADD FILTER</button>
         <button id="btn-pol-clear-filter" class="btn btn-sm" style="background:transparent;border:1px solid rgba(255,255,255,.08);color:#64748b;white-space:nowrap">Clear</button>

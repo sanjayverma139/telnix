@@ -266,7 +266,7 @@ export function renderPols() {
     return `<div class="pol-group-wrap" style="margin-bottom:6px">
       <table style="width:100%;border-collapse:collapse">
         <thead>
-          <tr style="background:#0a1120;border-radius:10px">
+          <tr class="pol-group-head">
             <td colspan="9" style="padding:10px 16px;border-radius:10px">
               <div style="display:flex;align-items:center;gap:10px">
                 <span style="color:#64748b;font-size:12px;font-weight:700">${gi+1}.</span>
@@ -276,7 +276,7 @@ export function renderPols() {
               </div>
             </td>
           </tr>
-          ${filtered.length>0||ghosts.length>0?`<tr style="background:rgba(255,255,255,.02);border-bottom:1px solid rgba(255,255,255,.04)">
+          ${filtered.length>0||ghosts.length>0?`<tr class="pol-group-subhead">
             <th style="width:50px;padding:8px 8px 8px 28px;font-size:10px;color:#374151">#</th>
             <th style="font-size:10px;color:#374151;text-align:left;padding:8px">NAME</th>
             <th style="font-size:10px;color:#374151;text-align:left;padding:8px">TYPE</th>
@@ -325,7 +325,8 @@ function openPolMenu(e, polId, grpId, idx, total) {
   e.stopPropagation(); closeAllMenus();
   const menu = document.createElement('div');
   menu.className = 'pol-dd-menu';
-  menu.style.cssText = 'position:fixed;background:#0d1424;border:1px solid rgba(99,102,241,.3);border-radius:10px;min-width:190px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.7);overflow:hidden';
+  menu.style.cssText = 'position:fixed;min-width:190px;z-index:9999';
+  menu.classList.add('surface-menu');
   const isPendingDel = !!(D.pendingPolicies||[]).find(x=>x._pendingId==='del_pol_'+polId);
   menu.innerHTML = `
     <div class="pol-dd-item ${isPendingDel?'pol-dd-disabled':''}" onclick="window._openPolModal('${polId}')">✏ Edit Policy</div>
@@ -351,7 +352,8 @@ function openGrpMenu(e, grpId, gi) {
   const isDefault=grp?._isDefault;
   const menu = document.createElement('div');
   menu.className = 'pol-dd-menu';
-  menu.style.cssText = 'position:fixed;background:#0d1424;border:1px solid rgba(99,102,241,.3);border-radius:10px;min-width:180px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.7);overflow:hidden';
+  menu.style.cssText = 'position:fixed;min-width:180px;z-index:9999';
+  menu.classList.add('surface-menu');
   menu.innerHTML = `
     <div class="pol-dd-item ${canUp?'':'pol-dd-disabled'}" onclick="window._moveGrp('${grpId}','up')">▲ Move Group Up</div>
     <div class="pol-dd-item ${canDown?'':'pol-dd-disabled'}" onclick="window._moveGrp('${grpId}','down')">▼ Move Group Down</div>
@@ -369,7 +371,8 @@ function openFilterDropdown(e) {
   e.stopPropagation(); closeAllMenus();
   const menu = document.createElement('div');
   menu.className = 'pol-dd-menu';
-  menu.style.cssText = 'position:fixed;background:#0d1424;border:1px solid rgba(99,102,241,.3);border-radius:12px;min-width:220px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.7);overflow:hidden';
+  menu.style.cssText = 'position:fixed;min-width:220px;z-index:9999';
+  menu.classList.add('surface-menu','soft');
   menu.innerHTML = `
     <div style="padding:6px 14px;font-size:9px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.8px">Action</div>
     <div class="pol-dd-item" onclick="window._addPolFilter('action','block','Action = Block')">🔴 Action = Block</div>
@@ -489,15 +492,15 @@ function buildChipDropdown(containerId, allItems, selectedIds, opts={}) {
   const el=$(containerId);if(!el)return null;el.innerHTML='';
   const wrap=document.createElement('div');wrap.style.cssText='position:relative';
   const inputRow=document.createElement('div');
-  inputRow.style.cssText='display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:6px 10px;background:#060d1a;border:1.5px solid rgba(99,102,241,.2);border-radius:8px;min-height:38px;cursor:text;transition:border-color .15s';
+  inputRow.className='search-chip-input';
   const chipsWrap=document.createElement('div');chipsWrap.style.cssText='display:flex;flex-wrap:wrap;gap:4px;flex:1;align-items:center';
   const searchInput=document.createElement('input');
   searchInput.placeholder=opts.placeholder||'Search and select...';
   searchInput.style.cssText='background:transparent;border:none;outline:none;color:#e2e8f0;font-size:12px;min-width:80px;flex:1;margin:0';
   const dd=document.createElement('div');
-  dd.style.cssText='display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#0d1424;border:1px solid rgba(99,102,241,.3);border-radius:10px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.6);overflow:hidden';
+  dd.className='search-chip-dd';
   let selected=new Set(selectedIds||[]),filterMode='all';
-  function renderChips(){chipsWrap.innerHTML='';selected.forEach(id=>{const item=allItems.find(x=>(x.id||x)===id);const label=item?.name||item?.label||id;const chip=document.createElement('div');chip.style.cssText='display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:rgba(99,102,241,.15);color:#a5b4fc;border:1px solid rgba(99,102,241,.3)';chip.innerHTML=`${esc(label)}<button style="background:none;border:none;color:#a5b4fc;cursor:pointer;font-size:11px;padding:0 0 0 2px;line-height:1">✕</button>`;chip.querySelector('button').addEventListener('click',e=>{e.stopPropagation();selected.delete(id);renderChips();renderDd(searchInput.value);});chipsWrap.appendChild(chip);});chipsWrap.appendChild(searchInput);}
+  function renderChips(){chipsWrap.innerHTML='';selected.forEach(id=>{const item=allItems.find(x=>(x.id||x)===id);const label=item?.name||item?.label||id;const chip=document.createElement('div');chip.className='search-chip';chip.innerHTML=`${esc(label)}<button style="background:none;border:none;color:#a5b4fc;cursor:pointer;font-size:11px;padding:0 0 0 2px;line-height:1">✕</button>`;chip.querySelector('button').addEventListener('click',e=>{e.stopPropagation();selected.delete(id);renderChips();renderDd(searchInput.value);});chipsWrap.appendChild(chip);});chipsWrap.appendChild(searchInput);}
   function renderDd(q){let items=allItems;if(opts.hasFilter){if(filterMode==='predefined')items=allItems.filter(x=>!x.isCustom);else if(filterMode==='custom')items=allItems.filter(x=>x.isCustom);}if(q)items=items.filter(x=>(x.name||x.label||x||'').toLowerCase().includes(q.toLowerCase()));let html='';if(opts.hasFilter){html+=`<div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.06)">${['all','predefined','custom'].map(m=>`<button data-fm="${m}" style="flex:1;padding:7px;font-size:11px;font-weight:${filterMode===m?'700':'500'};color:${filterMode===m?'#a5b4fc':'#64748b'};background:${filterMode===m?'rgba(99,102,241,.1)':'transparent'};border:none;cursor:pointer;border-bottom:2px solid ${filterMode===m?'#6366f1':'transparent'}">${m.charAt(0).toUpperCase()+m.slice(1)}</button>`).join('')}</div>`;}html+=`<div style="max-height:180px;overflow-y:auto">`;if(!items.length){html+='<div style="padding:12px 14px;font-size:12px;color:#475569">No results</div>';}else html+=items.map(item=>{const id=item?.id||item;const label=item?.name||item?.label||item||id;const isSel=selected.has(id);return`<div data-id="${esc(String(id))}" style="display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;font-size:12px;color:${isSel?'#a5b4fc':'#cbd5e1'};background:${isSel?'rgba(99,102,241,.1)':'transparent'}"><input type="checkbox" ${isSel?'checked':''} style="accent-color:#6366f1;margin:0;flex-shrink:0;width:14px;height:14px"><span>${esc(label)}</span>${item?.isCustom?'<span style="font-size:9px;color:#475569;margin-left:auto">custom</span>':''}</div>`;}).join('');html+='</div>';dd.innerHTML=html;dd.querySelectorAll('[data-fm]').forEach(btn=>{btn.addEventListener('click',e=>{e.stopPropagation();filterMode=btn.dataset.fm;renderDd(searchInput.value);});});dd.querySelectorAll('[data-id]').forEach(row=>{row.addEventListener('click',e=>{e.stopPropagation();const id=row.dataset.id;if(selected.has(id))selected.delete(id);else selected.add(id);renderChips();renderDd(searchInput.value);});});}
   searchInput.addEventListener('input',()=>renderDd(searchInput.value));
   searchInput.addEventListener('focus',()=>{renderDd(searchInput.value);dd.style.display='block';inputRow.style.borderColor='rgba(99,102,241,.6)';});
