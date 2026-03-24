@@ -47,7 +47,7 @@ renderAppShell({
         <div style="margin-bottom:14px">
           <label>Policy Name *</label><input type="text" id="pm-name" placeholder="e.g. Block Social Media" style="margin:0">
         </div>
-        <div style="background:#0a1120;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px;margin-bottom:16px">
+        <div class="policy-source-panel">
           <div style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">Source <span style="color:#374151;font-weight:400;text-transform:none;letter-spacing:0">(who this policy applies to - leave empty for everyone)</span></div>
           <div style="margin-bottom:10px">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
@@ -64,11 +64,11 @@ renderAppShell({
         </div>
         <label>Policy Type</label>
         <div class="type-cards">
-          <div class="pm-type-card sel" data-t="domain"><div class="type-card-icon">Domain</div><div class="type-card-name">Domain</div><div class="type-card-sub">Specific domains</div></div>
-          <div class="pm-type-card" data-t="category"><div class="type-card-icon">Category</div><div class="type-card-name">Category</div><div class="type-card-sub">Content category</div></div>
-          <div class="pm-type-card" data-t="list"><div class="type-card-icon">URL List</div><div class="type-card-name">URL List</div><div class="type-card-sub">Custom list</div></div>
-          <div class="pm-type-card" data-t="threat"><div class="type-card-icon">Threat</div><div class="type-card-name">Threat Score</div><div class="type-card-sub">Heuristic risk</div></div>
-          <div class="pm-type-card" data-t="reputation"><div class="type-card-icon">Known</div><div class="type-card-name">Known Malicious</div><div class="type-card-sub">Reputation DB</div></div>
+          <div class="pm-type-card sel" data-t="domain"><div class="type-card-icon">&#127760;</div><div class="type-card-name">Domain</div><div class="type-card-sub">Specific domains</div></div>
+          <div class="pm-type-card" data-t="category"><div class="type-card-icon">&#128193;</div><div class="type-card-name">Category</div><div class="type-card-sub">Content category</div></div>
+          <div class="pm-type-card" data-t="list"><div class="type-card-icon">&#128203;</div><div class="type-card-name">URL List</div><div class="type-card-sub">Custom list</div></div>
+          <div class="pm-type-card" data-t="threat"><div class="type-card-icon">&#9889;</div><div class="type-card-name">Threat Score</div><div class="type-card-sub">Heuristic risk</div></div>
+          <div class="pm-type-card" data-t="reputation"><div class="type-card-icon">&#129504;</div><div class="type-card-name">Known Malicious</div><div class="type-card-sub">Reputation DB</div></div>
         </div>
         <div id="crit-domain">
           <label>Domains (one per line)</label>
@@ -106,7 +106,7 @@ renderAppShell({
           <button class="abtn" data-v="all">Both</button>
         </div>
         <div id="pm-ftrow" class="hid"><label>File Type List (blank = all)</label><select id="pm-ftl" style="margin-bottom:14px"></select></div>
-        <div style="background:#0a1120;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:14px;margin-bottom:14px">
+        <div class="policy-schedule-panel">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
             <input type="checkbox" id="pm-sched-enabled" style="width:16px;height:16px;accent-color:#6366f1;margin:0">
             <label style="text-transform:none;letter-spacing:0;font-size:13px;color:#e2e8f0;margin:0">Enable Schedule</label>
