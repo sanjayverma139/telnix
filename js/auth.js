@@ -9,6 +9,65 @@ import { showPage } from './nav.js';
 
 const SESSION_KEY = 'telnix_admin_session_v1';
 
+function normalizePolicyPayload(payload) {
+  const orderedPolicies = Array.isArray(payload?.orderedPolicies)
+    ? payload.orderedPolicies
+    : Array.isArray(payload?.policies)
+      ? payload.policies
+      : Array.isArray(payload?.rules)
+        ? payload.rules
+        : [];
+
+  const policyGroups = Array.isArray(payload?.policyGroups)
+    ? payload.policyGroups.map(g => ({
+        ...g,
+        policyIds: Array.isArray(g?.policyIds) ? g.policyIds.filter(Boolean) : [],
+      }))
+    : Array.isArray(payload?.groups)
+      ? payload.groups.map(g => ({
+          ...g,
+          policyIds: Array.isArray(g?.policyIds)
+            ? g.policyIds.filter(Boolean)
+            : Array.isArray(g?.policies)
+              ? g.policies.map(p => typeof p === 'string' ? p : p?.id).filter(Boolean)
+              : [],
+        }))
+      : [];
+
+  const policiesById = new Map(orderedPolicies.filter(Boolean).map(pol => [pol.id, pol]));
+  const assignedIds = new Set();
+  policyGroups.forEach(group => (group.policyIds || []).forEach(id => {
+    if (policiesById.has(id)) assignedIds.add(id);
+  }));
+
+  const defaultGroup = policyGroups.find(g => g._isDefault || g.name === 'Default') || null;
+  const orphanIds = orderedPolicies
+    .filter(pol => pol?.id && !assignedIds.has(pol.id))
+    .map(pol => pol.id);
+
+  if (!policyGroups.length) {
+    policyGroups.push({
+      id: 'grp_def_' + Date.now(),
+      name: 'Default',
+      _isDefault: true,
+      policyIds: orphanIds,
+    });
+  } else if (orphanIds.length) {
+    if (defaultGroup) {
+      defaultGroup.policyIds = [...new Set([...(defaultGroup.policyIds || []), ...orphanIds])];
+    } else {
+      policyGroups.unshift({
+        id: 'grp_def_' + Date.now(),
+        name: 'Default',
+        _isDefault: true,
+        policyIds: orphanIds,
+      });
+    }
+  }
+
+  return { orderedPolicies, policyGroups };
+}
+
 function persistSession(session) {
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
 }
@@ -28,9 +87,10 @@ function clearPersistedSession() {
 async function hydrateAppState() {
   const payload = await loadData();
   if (payload) {
-    D.orderedPolicies         = payload.orderedPolicies         || [];
+    const normalized = normalizePolicyPayload(payload);
+    D.orderedPolicies         = normalized.orderedPolicies;
     D.pendingPolicies         = payload.pendingPolicies         || [];
-    D.policyGroups            = payload.policyGroups            || [];
+    D.policyGroups            = normalized.policyGroups;
     D.urlLists                = payload.urlLists                || [];
     D.pendingUrlLists         = payload.pendingUrlLists         || [];
     D.customCategories        = payload.customCategories        || [];
