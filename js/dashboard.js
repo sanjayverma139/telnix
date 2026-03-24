@@ -4,7 +4,6 @@ import { $, esc, fmt }   from './utils.js';
 import { fetchDashStats } from './api.js';
 import { CAT_COLORS }     from './config.js';
 import { showPage }       from './nav.js';
-import { addLogFilter }   from './logs.js';
 
 export async function loadDash() {
   $('dash-tb').innerHTML = '<tr><td colspan="6" class="loading">Loading...</td></tr>';
@@ -66,10 +65,11 @@ export function initDashboard() {
 
   // Clickable stat cards → filtered log view
   document.querySelectorAll('.dash-stat[data-filter]').forEach(card => {
-    card.addEventListener('click', () => {
+    card.addEventListener('click', async () => {
       const f = card.dataset.filter;
-      if (f === 'block')    { addLogFilter('action','block','Action = Block'); }
-      else if (f === 'warn')  { addLogFilter('action','warn','Action = Warn'); }
+      const { addLogFilter } = await import('./logs.js');
+      if (f === 'block') { addLogFilter('action','block','Action = Block'); }
+      else if (f === 'warn') { addLogFilter('action','warn','Action = Warn'); }
       else if (f === 'allow') { addLogFilter('action','allow','Action = Allow'); }
       else if (f === 'bypassed') { addLogFilter('proceeded','true','User Bypassed Warning'); }
       showPage('logs');

@@ -6,7 +6,6 @@ import { $ }        from './utils.js';
 import { loadData } from './api.js';
 import { D }        from './state.js';
 import { showPage } from './nav.js';
-import { loadDash } from './dashboard.js';
 
 export function initAuth() {
   $('l-btn').addEventListener('click', doLogin);
@@ -57,8 +56,7 @@ async function doLogin() {
     if (!D.policyGroups.find(g => g.name === 'Default'))
       D.policyGroups.push({ id: 'grp_def_' + Date.now(), name: 'Default', _isDefault: true, policyIds: [] });
 
-    showPage('dashboard');
-    loadDash();
+    await showPage('dashboard');
     // Restore pending bar if pending policies exist from previous session
     if ((D.pendingPolicies||[]).length > 0) {
       import('./policies.js').then(m => m.renderPols());
