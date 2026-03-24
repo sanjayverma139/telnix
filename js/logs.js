@@ -4,7 +4,8 @@ import { $, esc, fmt, fmtF } from './utils.js';
 import { fetchLogs, PAGE_SIZE } from './api.js';
 import { setAllLogs, allLogs } from './state.js';
 import { showPage }           from './nav.js';
-import { SB, ANON, ORG, SVC } from './config.js';
+import { ORG } from './config.js';
+import { sbf } from './api.js';
 
 const LOGS_FILTER_KEY = 'telnix_logs_filter_v1';
 
@@ -241,11 +242,9 @@ function removeFilter(key) {
 async function loadUserOptions(search='') {
   if (!knownUsers.length) {
     try {
-      const r = await fetch(`${SB}/auth/v1/admin/users?per_page=200`, {
-        headers: { apikey: SVC, Authorization: `Bearer ${SVC}` }
-      });
-      const d = r.ok ? await r.json() : {};
-      knownUsers = (d.users||[]).map(u => u.email).filter(Boolean).sort();
+      const r = await sbf(`/rest/v1/activity_logs?org_id=eq.${ORG}&select=user_email&order=ts.desc&limit=500`);
+      const rows = r.ok ? await r.json() : [];
+      knownUsers = [...new Set(rows.map(row => row.user_email).filter(Boolean))].sort();
     } catch { knownUsers = []; }
   }
   renderUserOptions(search);

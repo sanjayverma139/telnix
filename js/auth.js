@@ -53,6 +53,10 @@ function showAuthenticatedUi(email) {
   if ($('app')) $('app').style.display = 'flex';
 }
 
+function isLegacyIndexShell() {
+  return !!($('login-screen') && $('app'));
+}
+
 export function initAuth() {
   $('l-btn')?.addEventListener('click', doLogin);
   $('l-email')?.addEventListener('keydown', e => { if (e.key === 'Enter') $('l-pass')?.focus(); });
@@ -83,6 +87,11 @@ async function doLogin() {
     persistSession({ accessToken: d.access_token, email: d.user.email });
     showAuthenticatedUi(d.user.email);
     await hydrateAppState();
+
+    if (isLegacyIndexShell()) {
+      location.href = './dashboard.html';
+      return;
+    }
 
     const nextPage = (location.hash || '#dashboard').replace(/^#/, '');
     await showPage(nextPage);
@@ -118,6 +127,11 @@ async function restoreIndexSession() {
   if (!session?.accessToken) return;
 
   setTOK(session.accessToken);
+  if (isLegacyIndexShell()) {
+    location.href = './dashboard.html';
+    return;
+  }
+
   showAuthenticatedUi(session.email);
   await hydrateAppState();
 
