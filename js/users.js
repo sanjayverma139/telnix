@@ -7,6 +7,8 @@
 import { $, esc, fmtF, showAlert } from './utils.js';
 import { fetchAuthUsers, fetchUserLogMap } from './api.js';
 
+const LOGS_FILTER_KEY = 'telnix_logs_filter_v1';
+
 export async function loadUsers() {
   $('users-tb').innerHTML = '<tr><td colspan="4" class="loading">Loading...</td></tr>';
 
@@ -48,6 +50,16 @@ export function initUsers() {
 
   // Expose filter helper to inline onclick handlers
   window._filterByUser = (email) => {
-    import('./logs.js').then(m => m.filterByUser(email));
+    sessionStorage.setItem(LOGS_FILTER_KEY, JSON.stringify({
+      type: 'userEmail',
+      val: email,
+      label: `User = ${email}`,
+    }));
+
+    if (document.getElementById('page-logs')) {
+      import('./logs.js').then(m => m.filterByUser(email));
+    } else {
+      location.href = './logs.html';
+    }
   };
 }

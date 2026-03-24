@@ -1,17 +1,17 @@
 const NAV_ITEMS = [
   { label: 'Dashboard', href: './dashboard.html', key: 'dashboard', section: 'Overview' },
   { label: 'Activity Logs', href: './logs.html', key: 'logs' },
-  { label: 'Policies', href: './index.html#policies', key: 'policies', section: 'Policy' },
+  { label: 'Policies', href: './policies.html', key: 'policies', section: 'Policy' },
   { label: 'Category Rules', href: './index.html#categoryPolicies', key: 'categoryPolicies' },
   { label: 'URL Lists', href: './index.html#urllists', key: 'urllists' },
   { label: 'File Type Lists', href: './index.html#filetypes', key: 'filetypes' },
   { label: 'Custom Categories', href: './index.html#categories', key: 'categories' },
   { label: 'User Groups', href: './index.html#usergroups', key: 'usergroups', section: 'Access' },
-  { label: 'Users', href: './index.html#users', key: 'users' },
+  { label: 'Users', href: './users.html', key: 'users' },
   { label: 'Bypass Codes', href: './index.html#bypass', key: 'bypass' },
   { label: 'URL Tester', href: './index.html#urltester', key: 'urltester', section: 'Tools' },
   { label: 'Noise Filter', href: './index.html#noise', key: 'noise' },
-  { label: 'Configuration', href: './index.html#config', key: 'config' },
+  { label: 'Configuration', href: './config.html', key: 'config' },
 ];
 
 export function renderAppShell({ activeKey, content, extraMarkup = '' }) {
