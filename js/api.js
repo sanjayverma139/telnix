@@ -3,11 +3,23 @@
 import { SB, ANON, ORG } from './config.js';
 import { TOK, D }        from './state.js';
 
+function isJwtExpired(token) {
+  if (!token || token.split('.').length < 2) return false;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (!payload?.exp) return false;
+    return payload.exp * 1000 <= Date.now() + 30000;
+  } catch {
+    return false;
+  }
+}
+
 export async function sbf(path, opts = {}) {
+  const bearer = TOK && !isJwtExpired(TOK) ? TOK : ANON;
   const headers = {
     'apikey':        ANON,
     'Content-Type':  'application/json',
-    'Authorization': `Bearer ${TOK || ANON}`,
+    'Authorization': `Bearer ${bearer}`,
     ...(opts.headers || {}),
   };
   return fetch(SB + path, { ...opts, headers });

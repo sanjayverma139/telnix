@@ -9,6 +9,17 @@ import { showPage } from './nav.js';
 
 const SESSION_KEY = 'telnix_admin_session_v1';
 
+function isJwtExpired(token) {
+  if (!token || token.split('.').length < 2) return false;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (!payload?.exp) return false;
+    return payload.exp * 1000 <= Date.now() + 30000;
+  } catch {
+    return false;
+  }
+}
+
 function normalizePolicyPayload(payload) {
   const orderedPolicies = Array.isArray(payload?.orderedPolicies)
     ? payload.orderedPolicies
@@ -84,6 +95,40 @@ function clearPersistedSession() {
   localStorage.removeItem(SESSION_KEY);
 }
 
+async function refreshPersistedSession(session) {
+  if (!session?.refreshToken) return null;
+  try {
+    const r = await fetch(`${SB}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: { 'apikey': ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: session.refreshToken }),
+    });
+    const d = await r.json();
+    if (!r.ok || !d?.access_token) return null;
+
+    const next = {
+      accessToken: d.access_token,
+      refreshToken: d.refresh_token || session.refreshToken,
+      email: d.user?.email || session.email || '',
+    };
+    persistSession(next);
+    setTOK(next.accessToken);
+    return next;
+  } catch {
+    return null;
+  }
+}
+
+async function ensureSession() {
+  const session = readPersistedSession();
+  if (!session?.accessToken) return null;
+  if (!isJwtExpired(session.accessToken)) {
+    setTOK(session.accessToken);
+    return session;
+  }
+  return refreshPersistedSession(session);
+}
+
 async function hydrateAppState() {
   const payload = await loadData();
   if (payload) {
@@ -144,7 +189,11 @@ async function doLogin() {
     }
 
     setTOK(d.access_token);
-    persistSession({ accessToken: d.access_token, email: d.user.email });
+    persistSession({
+      accessToken: d.access_token,
+      refreshToken: d.refresh_token,
+      email: d.user.email,
+    });
     showAuthenticatedUi(d.user.email);
     await hydrateAppState();
 
@@ -183,10 +232,9 @@ async function doLogout() {
 }
 
 async function restoreIndexSession() {
-  const session = readPersistedSession();
+  const session = await ensureSession();
   if (!session?.accessToken) return;
 
-  setTOK(session.accessToken);
   if (isLegacyIndexShell()) {
     location.href = './dashboard.html';
     return;
@@ -200,12 +248,12 @@ async function restoreIndexSession() {
 }
 
 export async function requireSession(redirectTo = './index.html') {
-  const session = readPersistedSession();
+  const session = await ensureSession();
   if (!session?.accessToken) {
+    clearPersistedSession();
     location.href = redirectTo;
     return null;
   }
-  setTOK(session.accessToken);
   return session;
 }
 
