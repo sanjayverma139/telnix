@@ -7,7 +7,7 @@ renderAppShell({
   content: `
     <div class="page active" id="page-logs">
       <div class="page-header">
-        <div><div class="page-title">Activity Logs</div><div class="page-sub">All user browsing and download activity</div></div>
+      <div><div class="page-title">Activity Logs</div><div class="page-sub">All user browsing, upload, and download activity</div></div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-ghost btn-sm" id="btn-logs-refresh">Refresh</button>
         </div>
@@ -57,6 +57,7 @@ renderAppShell({
             <div class="fp-title">Activity Type</div>
             <label class="fp-opt"><input type="checkbox" value="browse"> Browse</label>
             <label class="fp-opt"><input type="checkbox" value="download"> Download</label>
+            <label class="fp-opt"><input type="checkbox" value="upload"> Upload</label>
             <label class="fp-opt"><input type="checkbox" value="warn"> Warn Proceeded</label>
             <button class="fp-apply" onclick="window._applyFilter('activity')">Apply</button>
           </div>

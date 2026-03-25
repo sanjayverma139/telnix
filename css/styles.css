@@ -93,6 +93,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:rgba(255,255,255,.02)
 .badge-allow{background:rgba(16,185,129,.12);color:#10b981}
 .badge-browse{background:rgba(96,165,250,.12);color:#60a5fa}
 .badge-download{background:rgba(245,158,11,.12);color:#fbbf24}
+.badge-upload{background:rgba(34,197,94,.12);color:#22c55e}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center;overflow-y:auto;padding:20px}
 .modal-bg.open{display:flex}
 .modal{background:#0d1424;border:1px solid rgba(99,102,241,.3);border-radius:16px;padding:28px;width:660px;max-width:96vw;max-height:90vh;overflow-y:auto}
