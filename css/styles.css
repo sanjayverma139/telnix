@@ -127,9 +127,11 @@ tr:last-child td{border-bottom:none}tr:hover td{background:rgba(255,255,255,.02)
 .pol-group-head td,.pol-group-subhead th{border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06)}
 .pol-group-head td{background:#0f1729;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);box-shadow:0 10px 24px rgba(2,6,23,.18)}
 .pol-group-subhead th{background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.04)}
+.pol-group-subhead th{font-size:11px !important;color:#374151 !important;text-align:left !important;padding:8px !important;font-weight:650 !important}
 .pol-group-head td:first-child,.pol-group-subhead th:first-child{border-top-left-radius:10px;border-bottom-left-radius:10px}
 .pol-group-head td:last-child,.pol-group-subhead th:last-child{border-top-right-radius:10px;border-bottom-right-radius:10px}
 .pol-tr td{background:#0d1424;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);transition:background .14s ease,border-color .14s ease,box-shadow .14s ease;padding-top:8px;padding-bottom:8px}
+.pol-tr td{font-weight:400 !important;font-size:12px !important;color:#e2e8f0 !important}
 .pol-tr td:first-child{border-left:1px solid rgba(255,255,255,.06);border-top-left-radius:10px;border-bottom-left-radius:10px}
 .pol-tr td:last-child{border-right:1px solid rgba(255,255,255,.06);border-top-right-radius:10px;border-bottom-right-radius:10px}
 .pol-tr:hover td{background:#111a2e;border-color:rgba(99,102,241,.18)}
@@ -345,7 +347,8 @@ body.light-theme .type-card-icon{background:rgba(79,70,229,.09);color:#3746c8;bo
 body.light-theme .pol-group-wrap table{border-spacing:0 6px}
 body.light-theme .pol-group-head td{background:#edf3fb;border-color:rgba(15,23,42,.1);box-shadow:0 10px 24px rgba(15,23,42,.06)}
 body.light-theme .pol-group-subhead th{background:#f7faff;border-color:rgba(15,23,42,.08)}
-body.light-theme .pol-tr td{background:#ffffff;border-top:1px solid rgba(15,23,42,.1);border-bottom:1px solid rgba(15,23,42,.1);font-size:16px}
+body.light-theme .pol-group-subhead th{color:#374151 !important}
+body.light-theme .pol-tr td{background:#ffffff;border-top:1px solid rgba(15,23,42,.1);border-bottom:1px solid rgba(15,23,42,.1);font-size:12px !important;color:#142033 !important}
 body.light-theme .pol-tr td:first-child{border-left:1px solid rgba(15,23,42,.1)}
 body.light-theme .pol-tr td:last-child{border-right:1px solid rgba(15,23,42,.1)}
 body.light-theme .pol-tr:hover td{background:#f4f8ff !important;border-color:rgba(79,70,229,.18)}
