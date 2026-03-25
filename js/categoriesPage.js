@@ -42,10 +42,10 @@ renderAppShell({
         <div style="margin-bottom:14px"><label>URL Lists (Included)</label><div id="cc-url-lists-wrap"></div></div>
         <div style="margin-bottom:14px"><label>Domains (one per line, optional)</label><textarea id="cc-domains" rows="3" placeholder="domain1.com&#10;domain2.com"></textarea></div>
         <div class="category-exclusions-panel">
-          <div style="font-size:10px;font-weight:700;color:#f87171;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">Exclusions</div>
-          <label style="color:#94a3b8;font-size:10px;margin-bottom:6px">Exclude URL Lists</label>
+          <div style="font-size:10px;font-weight:700;color:#f12222;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">Exclusions</div>
+          <label style="color:#565855;font-size:10px;margin-bottom:6px">Exclude URL Lists</label>
           <div id="cc-excl-lists-wrap" style="margin-bottom:12px"></div>
-          <label style="color:#94a3b8;font-size:10px;margin-bottom:6px">Exclude Specific Domains</label>
+          <label style="color:#565855;font-size:10px;margin-bottom:6px">Exclude Specific Domains</label>
           <textarea id="cc-excl-urls" rows="2" placeholder="e.g. allowedsite.com" style="margin:0"></textarea>
         </div>
         <div class="modal-footer">
