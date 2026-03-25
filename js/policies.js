@@ -204,7 +204,7 @@ export function renderPols() {
       const icon=TC_ICON[pol.type]||'🌐';
       const cond=buildCondSummary(pol);
       const schedBadge=pol.schedule?`<span style="font-size:10px;color:#a5b4fc">⏰ Sched</span>`:'<span style="color:#374151">—</span>';
-      const actBadge=pol.activity==='download'?'📥':pol.activity==='all'?'🔒':'🌐';
+      const actBadge=pol.activity==='download'?'📥':pol.activity==='upload'?'📤':pol.activity==='all'?'🔒':'🌐';
       // Check for any pending change on this policy
       const pendingTog  = (D.pendingPolicies||[]).find(x=>x._pendingId==='tog_'+pol.id&&x.type==='toggle_policy');
       const pendingEdit = (D.pendingPolicies||[]).find(x=>x.policyId===pol.id&&x.type==='edit_policy');

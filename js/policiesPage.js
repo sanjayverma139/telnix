@@ -105,6 +105,7 @@ renderAppShell({
         <div class="act-btns">
           <button class="abtn sel-act" data-v="browse">Browse</button>
           <button class="abtn" data-v="download">Download</button>
+          <button class="abtn" data-v="upload">Upload</button>
           <button class="abtn" data-v="all">Both</button>
         </div>
         <div id="pm-ftrow" class="hid"><label>File Type List (blank = all)</label><select id="pm-ftl" style="margin-bottom:14px"></select></div>
