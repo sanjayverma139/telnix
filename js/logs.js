@@ -401,6 +401,9 @@ function openInvestigation(idx) {
       ${row('Group',l.group_name||'—')}
       ${row('Category',l.category||'—')}
       ${l.download_filename?row('File',l.download_filename,'#fbbf24'):''}
+      ${l.upload_filename&&l.upload_filename!==l.download_filename?row('Upload File',l.upload_filename,'#fbbf24'):''}
+      ${(l.file_count&&l.file_count>0)?row('File Count',l.file_count+' file'+(l.file_count>1?'s':''),'#94a3b8'):''}
+      ${(l.total_size&&l.total_size>0)?row('File Size',formatBytes(l.total_size),'#94a3b8'):''}
       ${l.proceeded?row('Bypassed Warning','Yes','#a78bfa'):''}
       ${(l.activity==='xhr'||l.activity==='upload')?`
         <div style="font-size:10px;font-weight:800;color:${sectionCol};text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px">📡 Request Details</div>
@@ -410,7 +413,7 @@ function openInvestigation(idx) {
         ${l.initiator                  ? row('Initiator',   l.initiator,                                                                         '#94a3b8') : ''}
         ${l.xhr_content_type||l.xhrContentType ? row('Content-Type', l.xhr_content_type||l.xhrContentType,                                      '#94a3b8') : ''}
         ${l.xhr_size||l.xhrSize        ? row('Size',        formatBytes(l.xhr_size||l.xhrSize||0),                                               '#94a3b8') : ''}
-        ${l.xhr_has_file||l.xhrHasFile ? row('File Upload', '⚠️ Yes — file detected in request body',                                          '#f87171') : ''}
+        ${l.xhr_has_file||l.xhrHasFile ? row('File Upload', '⚠️ Yes', '#f87171') : ''}
         ${l.page_domain||l.pageDomain  ? row('Page Domain', l.page_domain||l.pageDomain,                                                         '#64748b') : ''}
       `:''}
       ${score!=null?`
