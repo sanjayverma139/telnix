@@ -1,25 +1,9 @@
 // api.js — All Supabase REST API calls
 
-import { SB, ANON, ORG, EDGE_FUNCTIONS } from './config.js';
-import { TOK, D, setTOK } from './state.js';
+import { SB, ANON, ORG } from './config.js';
+import { D } from './state.js';
 
 const SESSION_KEY = 'telnix_admin_session_v1';
-
-function decodeJwtPayload(token) {
-  if (!token || token.split('.').length < 2) return null;
-  try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(atob(base64));
-  } catch {
-    return null;
-  }
-}
-
-function isJwtExpired(token) {
-  const payload = decodeJwtPayload(token);
-  if (!payload?.exp) return false;
-  return payload.exp * 1000 <= Date.now() + 30000;
-}
 
 function readPersistedSession() {
   try {
@@ -29,102 +13,34 @@ function readPersistedSession() {
   }
 }
 
-function persistSession(session) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+function normalizeSessionPayload(payload) {
+  const src = payload?.session || payload || {};
+  return {
+    sessionToken: String(src.sessionToken || src.session_token || '').trim(),
+    userId: src.userId || src.user_id || null,
+    email: String(src.email || '').trim().toLowerCase(),
+    role: String(src.role || 'user').trim().toLowerCase(),
+    orgId: src.orgId || src.org_id || ORG,
+    expiresAt: Number(src.expiresAt || src.expires_at || 0) || 0,
+  };
 }
 
-async function refreshPersistedSession(session) {
-  if (!session?.refreshToken) return null;
+async function rpc(name, params = {}) {
+  const response = await fetch(`${SB}/rest/v1/rpc/${name}`, {
+    method: 'POST',
+    headers: {
+      apikey: ANON,
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${ANON}`,
+    },
+    body: JSON.stringify(params),
+  });
+
+  let body = null;
   try {
-    const r = await fetch(`${SB}/auth/v1/token?grant_type=refresh_token`, {
-      method: 'POST',
-      headers: { 'apikey': ANON, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: session.refreshToken }),
-    });
-    const d = await r.json().catch(() => null);
-    if (!r.ok || !d?.access_token) return null;
-
-    const next = {
-      accessToken: String(d.access_token || '').trim(),
-      refreshToken: String(d.refresh_token || session.refreshToken || '').trim(),
-      email: d.user?.email || session.email || '',
-      role: d.user?.app_metadata?.role || d.user?.user_metadata?.role || session.role || 'user',
-    };
-    persistSession(next);
-    setTOK(next.accessToken);
-    return next.accessToken;
+    body = await response.json();
   } catch {
-    return null;
-  }
-}
-
-async function ensureAccessToken(forceRefresh = false) {
-  if (!forceRefresh && TOK && !isJwtExpired(TOK)) {
-    return String(TOK).trim();
-  }
-
-  const session = readPersistedSession();
-  if (!session) return null;
-
-  const persistedToken = String(session.accessToken || '').trim();
-  if (!forceRefresh && persistedToken && !isJwtExpired(persistedToken)) {
-    setTOK(persistedToken);
-    return persistedToken;
-  }
-
-  return refreshPersistedSession(session);
-}
-
-export async function sbf(path, opts = {}) {
-  const accessToken = await ensureAccessToken(false);
-  const bearer = accessToken || ANON;
-  const headers = {
-    'apikey':        ANON,
-    'Content-Type':  'application/json',
-    'Authorization': `Bearer ${bearer}`,
-    ...(opts.headers || {}),
-  };
-  return fetch(SB + path, { ...opts, headers });
-}
-
-export async function invokeEdgeFunction(name, payload = {}) {
-  const callOnce = async (accessToken) => {
-    const response = await fetch(`${SB}/functions/v1/${name}`, {
-      method: 'POST',
-      headers: {
-        'apikey': ANON,
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`, // user JWT required to invoke Edge Function
-      },
-      body: JSON.stringify({
-        ...payload,
-        userJwt: accessToken, // Edge Function reads this to verify admin role
-      }),
-    });
-
-    let body = null;
-    try {
-      body = await response.json();
-    } catch {
-      body = null;
-    }
-
-    return { response, body };
-  };
-
-  let accessToken = await ensureAccessToken(false);
-  if (!accessToken) {
-    throw new Error('Session expired. Please sign in again.');
-  }
-
-  let { response, body } = await callOnce(accessToken);
-  const errorText = String(body?.error || body?.message || '').trim().toLowerCase();
-  if (response.status === 401 && (errorText.includes('jwt') || errorText.includes('token'))) {
-    const refreshedToken = await ensureAccessToken(true);
-    if (refreshedToken && refreshedToken !== accessToken) {
-      accessToken = refreshedToken;
-      ({ response, body } = await callOnce(accessToken));
-    }
+    body = null;
   }
 
   if (!response.ok) {
@@ -132,6 +48,53 @@ export async function invokeEdgeFunction(name, payload = {}) {
   }
 
   return body;
+}
+
+export async function sbf(path, opts = {}) {
+  const headers = {
+    'apikey':        ANON,
+    'Content-Type':  'application/json',
+    'Authorization': `Bearer ${ANON}`,
+    ...(opts.headers || {}),
+  };
+  return fetch(SB + path, { ...opts, headers });
+}
+
+export async function appLogin(email, password, requireRole = 'admin') {
+  const result = await rpc('telnix_app_login', {
+    p_org_id: ORG,
+    p_email: String(email || '').trim().toLowerCase(),
+    p_password: String(password || ''),
+    p_require_role: requireRole || null,
+  });
+  if (!result?.ok) {
+    throw new Error(result?.error || 'Login failed.');
+  }
+  return normalizeSessionPayload(result);
+}
+
+export async function validateAppSession(sessionToken, requireRole = 'admin') {
+  const token = String(sessionToken || '').trim();
+  if (!token) return null;
+  const result = await rpc('telnix_app_validate_session', {
+    p_session_token: token,
+    p_require_role: requireRole || null,
+  });
+  if (!result?.ok) return null;
+  return normalizeSessionPayload(result);
+}
+
+export async function appLogout(sessionToken) {
+  const token = String(sessionToken || '').trim();
+  if (!token) return true;
+  try {
+    await rpc('telnix_app_logout', {
+      p_session_token: token,
+    });
+  } catch {
+    // local logout should still succeed even if remote cleanup fails
+  }
+  return true;
 }
 
 export async function loadData() {
@@ -224,19 +187,41 @@ export async function fetchDashStats() {
 
 export async function fetchAuthUsers() {
   try {
-    const result = await invokeEdgeFunction(EDGE_FUNCTIONS.adminUsers, { action: 'list_users' });
-    return Array.isArray(result?.users) ? result.users : [];
+    const session = readPersistedSession();
+    if (!session?.sessionToken) throw new Error('Session expired. Please sign in again.');
+    const result = await rpc('telnix_admin_list_users', {
+      p_session_token: session.sessionToken,
+      p_org_id: ORG,
+    });
+    return Array.isArray(result?.users) ? result.users : Array.isArray(result) ? result : [];
   } catch (err) {
-    console.warn('[API] fetchAuthUsers fallback:', err.message);
+    console.warn('[API] fetchAuthUsers fallback:', err?.message || err);
     return null;
   }
 }
 
 export async function createAuthUser(userData) {
-  return invokeEdgeFunction(EDGE_FUNCTIONS.adminUsers, {
-    action: 'create_user',
-    ...userData,
+  const session = readPersistedSession();
+  if (!session?.sessionToken) {
+    throw new Error('Session expired. Please sign in again.');
+  }
+
+  const password = String(userData?.password || '').trim();
+  if (!password) {
+    throw new Error('Password is required for SQL users.');
+  }
+
+  const result = await rpc('telnix_admin_upsert_user', {
+    p_session_token: session.sessionToken,
+    p_org_id: ORG,
+    p_email: String(userData?.email || '').trim().toLowerCase(),
+    p_password: password,
+    p_role: String(userData?.role || 'user').trim().toLowerCase(),
   });
+  if (!result?.ok) {
+    throw new Error(result?.error || 'User save failed.');
+  }
+  return result;
 }
 
 export async function fetchUserLogMap() {

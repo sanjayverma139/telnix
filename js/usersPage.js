@@ -13,13 +13,13 @@ renderAppShell({
           <div><label>Email *</label><input type="email" id="u-email" placeholder="user@company.com"></div>
           <div><label>Role *</label><select id="u-role"><option value="user">User</option><option value="admin">Admin</option></select></div>
         </div>
-        <div style="margin-top:12px"><label>Password (optional)</label><input type="password" id="u-pass" placeholder="Leave blank to send invite email"></div>
-        <button class="btn btn-primary" id="btn-create-user">+ Create / Invite User</button>
-        <p style="font-size:11px;color:#475569;margin-top:10px">This page calls the <code style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace">admin-users</code> Supabase Edge Function. Leave password blank to send an invite email, or set one to create the account immediately.</p>
+        <div style="margin-top:12px"><label>Password *</label><input type="password" id="u-pass" placeholder="Set a password"></div>
+        <button class="btn btn-primary" id="btn-create-user">+ Create User</button>
+        <p style="font-size:11px;color:#475569;margin-top:10px">Users on this page are stored in the SQL user registry. Select <strong>Admin</strong> to create an admin-only account for the admin panel, or <strong>User</strong> for extension sign-in.</p>
       </div>
       <div class="card"><div class="card-title">All Users</div>
-        <div class="tbl-wrap"><table><thead><tr><th>Email</th><th>Last Sign In</th><th>Total Logs</th><th></th></tr></thead>
-        <tbody id="users-tb"><tr><td colspan="4" class="loading">Loading...</td></tr></tbody></table></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Email</th><th>Role</th><th>Last Sign In</th><th>Total Logs</th><th></th></tr></thead>
+        <tbody id="users-tb"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody></table></div>
       </div>
     </div>
   `,

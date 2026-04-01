@@ -11,7 +11,7 @@ const LOGS_FILTER_KEY = 'telnix_logs_filter_v1';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
 
 export async function loadUsers() {
-  $('users-tb').innerHTML = '<tr><td colspan="4" class="loading">Loading...</td></tr>';
+  $('users-tb').innerHTML = '<tr><td colspan="5" class="loading">Loading...</td></tr>';
 
   const [authUsers, logMap] = await Promise.all([
     fetchAuthUsers(),
@@ -22,6 +22,7 @@ export async function loadUsers() {
     $('users-tb').innerHTML = authUsers.map(u => `
       <tr>
         <td style="color:#a5b4fc">${esc(u.email)}</td>
+        <td style="font-size:11px;color:${u.role === 'admin' ? '#fbbf24' : '#94a3b8'};font-weight:700;text-transform:uppercase">${esc(u.role || 'user')}</td>
         <td style="color:#64748b;font-size:11px">${u.last_sign_in_at ? fmtF(new Date(u.last_sign_in_at).getTime()) : 'Never'}</td>
         <td style="font-weight:700">${logMap[u.email]?.count || 0}</td>
         <td><button class="btn btn-sm btn-ghost" onclick="window._filterByUser('${esc(u.email)}')">View Logs</button></td>
@@ -33,11 +34,12 @@ export async function loadUsers() {
     $('users-tb').innerHTML = entries.length ? entries.map(([email, info]) => `
       <tr>
         <td style="color:#a5b4fc">${esc(email)}</td>
+        <td style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase">USER</td>
         <td style="color:#64748b;font-size:11px">${info.last ? fmtF(info.last) : '—'}</td>
         <td style="font-weight:700">${info.count}</td>
         <td><button class="btn btn-sm btn-ghost" onclick="window._filterByUser('${esc(email)}')">View Logs</button></td>
       </tr>`
-    ).join('') : '<tr><td colspan="4" class="loading">No users yet</td></tr>';
+    ).join('') : '<tr><td colspan="5" class="loading">No users yet</td></tr>';
   }
 }
 
@@ -56,8 +58,12 @@ export function initUsers() {
       showAlert('u-al', 'error', 'Choose a valid role.');
       return;
     }
-    if (password && password.length < 8) {
-      showAlert('u-al', 'error', 'Password must be at least 8 characters, or leave it blank to send an invite.');
+    if (!password) {
+      showAlert('u-al', 'error', 'Password is required for SQL-backed users.');
+      return;
+    }
+    if (password.length < 8) {
+      showAlert('u-al', 'error', 'Password must be at least 8 characters.');
       return;
     }
 
@@ -78,8 +84,8 @@ export function initUsers() {
       showAlert(
         'u-al',
         'success',
-        result?.mode === 'invite'
-          ? `Invite sent to ${email} with ${role} role.`
+        result?.mode === 'updated'
+          ? `User ${email} updated with ${role} role.`
           : `User ${email} created with ${role} role.`
       );
       await loadUsers();
@@ -88,7 +94,7 @@ export function initUsers() {
     } finally {
       if (button) {
         button.disabled = false;
-        button.textContent = '+ Create / Invite User';
+        button.textContent = '+ Create User';
       }
     }
   });
