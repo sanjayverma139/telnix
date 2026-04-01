@@ -22,29 +22,17 @@ function getRole(user: any) {
 }
 
 async function resolveCaller(accessToken: string) {
-  const apiKey = SUPABASE_ANON_KEY || SUPABASE_SERVICE_ROLE_KEY;
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: {
-      apikey: apiKey,
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  let body: any = null;
-  try {
-    body = await res.json();
-  } catch {
-    body = null;
+  if (!SUPABASE_ANON_KEY) {
+    return { user: null, error: "Supabase anon key is unavailable in Edge Function env." };
   }
 
-  if (res.ok && body?.id) {
-    return { user: body, error: null };
+  const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { data, error } = await authClient.auth.getUser(accessToken);
+  if (error || !data?.user) {
+    return { user: null, error: error?.message || "Unauthorized." };
   }
 
-  return {
-    user: null,
-    error: body?.msg || body?.error_description || body?.error || `Auth lookup failed (${res.status})`,
-  };
+  return { user: data.user, error: null };
 }
 
 Deno.serve(async (req) => {
@@ -53,12 +41,17 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get("Authorization") || "";
     const body = await req.json().catch(() => ({}));
+    const headerToken = authHeader.startsWith("Bearer ")
+      ? authHeader.replace(/^Bearer\s+/i, "").trim()
+      : "";
     const forwardedUserJwt = String(body?.userJwt || "").trim();
-    if (!forwardedUserJwt) {
-      return json({ error: "Missing forwarded user session." }, 401);
+    const accessToken = forwardedUserJwt || headerToken;
+
+    if (!accessToken) {
+      return json({ error: "Missing authorization header" }, 401);
     }
-    const accessToken = forwardedUserJwt;
 
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
