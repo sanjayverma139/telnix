@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 const corsHeaders = {
@@ -39,8 +40,33 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { data: callerData, error: callerError } = await adminClient.auth.getUser(accessToken);
-    if (callerError || !callerData.user) {
+    let callerData: any = null;
+    let callerError: any = null;
+
+    if (SUPABASE_ANON_KEY) {
+      const callerClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      });
+      const result = await callerClient.auth.getUser();
+      callerData = result.data;
+      callerError = result.error;
+    }
+
+    if (!callerData?.user) {
+      const fallback = await adminClient.auth.getUser(accessToken);
+      if (fallback.data?.user) {
+        callerData = fallback.data;
+        callerError = fallback.error;
+      } else if (!callerError) {
+        callerError = fallback.error;
+      }
+    }
+
+    if (callerError || !callerData?.user) {
       return json({ error: callerError?.message || "Unauthorized." }, 401);
     }
 
