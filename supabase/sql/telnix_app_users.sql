@@ -83,7 +83,7 @@ begin
      and is_active = true
    limit 1;
 
-  if not found or v_user.password_hash <> crypt(coalesce(p_password, ''), v_user.password_hash) then
+  if not found or v_user.password_hash <> extensions.crypt(coalesce(p_password, ''), v_user.password_hash) then
     return jsonb_build_object('ok', false, 'error', 'Invalid email or password.');
   end if;
 
@@ -95,7 +95,7 @@ begin
     return jsonb_build_object('ok', false, 'error', 'This account can only sign in to the admin panel.');
   end if;
 
-  v_token := encode(gen_random_bytes(32), 'hex');
+  v_token := encode(extensions.gen_random_bytes(32), 'hex');
   v_expires := now() + interval '7 days';
 
   insert into public.telnix_app_sessions (user_id, session_token, expires_at)
@@ -310,7 +310,7 @@ begin
   if found then
     v_mode := 'updated';
     update public.telnix_app_users
-       set password_hash = crypt(trim(p_password), gen_salt('bf', 10)),
+       set password_hash = extensions.crypt(trim(p_password), extensions.gen_salt('bf', 10)),
            role = v_role,
            is_active = coalesce(p_is_active, true)
      where id = v_existing.id
@@ -325,7 +325,7 @@ begin
     ) values (
       coalesce(p_org_id, v_admin.org_id),
       v_email,
-      crypt(trim(p_password), gen_salt('bf', 10)),
+      extensions.crypt(trim(p_password), extensions.gen_salt('bf', 10)),
       v_role,
       coalesce(p_is_active, true)
     )
