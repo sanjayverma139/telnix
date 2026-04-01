@@ -94,11 +94,11 @@ export async function invokeEdgeFunction(name, payload = {}) {
       headers: {
         'apikey': ANON,
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${accessToken}`, // user JWT required to invoke Edge Function
       },
       body: JSON.stringify({
         ...payload,
-        userJwt: accessToken,
+        userJwt: accessToken, // Edge Function reads this to verify admin role
       }),
     });
 
