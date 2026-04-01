@@ -1,21 +1,83 @@
 // api.js — All Supabase REST API calls
 
 import { SB, ANON, ORG, EDGE_FUNCTIONS } from './config.js';
-import { TOK, D }        from './state.js';
+import { TOK, D, setTOK } from './state.js';
 
-function isJwtExpired(token) {
-  if (!token || token.split('.').length < 2) return false;
+const SESSION_KEY = 'telnix_admin_session_v1';
+
+function decodeJwtPayload(token) {
+  if (!token || token.split('.').length < 2) return null;
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    if (!payload?.exp) return false;
-    return payload.exp * 1000 <= Date.now() + 30000;
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(base64));
   } catch {
-    return false;
+    return null;
   }
 }
 
+function isJwtExpired(token) {
+  const payload = decodeJwtPayload(token);
+  if (!payload?.exp) return false;
+  return payload.exp * 1000 <= Date.now() + 30000;
+}
+
+function readPersistedSession() {
+  try {
+    return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+  } catch {
+    return null;
+  }
+}
+
+function persistSession(session) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+
+async function refreshPersistedSession(session) {
+  if (!session?.refreshToken) return null;
+  try {
+    const r = await fetch(`${SB}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: { 'apikey': ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: session.refreshToken }),
+    });
+    const d = await r.json().catch(() => null);
+    if (!r.ok || !d?.access_token) return null;
+
+    const next = {
+      accessToken: String(d.access_token || '').trim(),
+      refreshToken: String(d.refresh_token || session.refreshToken || '').trim(),
+      email: d.user?.email || session.email || '',
+      role: d.user?.app_metadata?.role || d.user?.user_metadata?.role || session.role || 'user',
+    };
+    persistSession(next);
+    setTOK(next.accessToken);
+    return next.accessToken;
+  } catch {
+    return null;
+  }
+}
+
+async function ensureAccessToken(forceRefresh = false) {
+  if (!forceRefresh && TOK && !isJwtExpired(TOK)) {
+    return String(TOK).trim();
+  }
+
+  const session = readPersistedSession();
+  if (!session) return null;
+
+  const persistedToken = String(session.accessToken || '').trim();
+  if (!forceRefresh && persistedToken && !isJwtExpired(persistedToken)) {
+    setTOK(persistedToken);
+    return persistedToken;
+  }
+
+  return refreshPersistedSession(session);
+}
+
 export async function sbf(path, opts = {}) {
-  const bearer = TOK && !isJwtExpired(TOK) ? TOK : ANON;
+  const accessToken = await ensureAccessToken(false);
+  const bearer = accessToken || ANON;
   const headers = {
     'apikey':        ANON,
     'Content-Type':  'application/json',
@@ -26,25 +88,40 @@ export async function sbf(path, opts = {}) {
 }
 
 export async function invokeEdgeFunction(name, payload = {}) {
-  if (!TOK || isJwtExpired(TOK)) {
+  const callOnce = async (accessToken) => {
+    const response = await fetch(`${SB}/functions/v1/${name}`, {
+      method: 'POST',
+      headers: {
+        'apikey': ANON,
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    let body = null;
+    try {
+      body = await response.json();
+    } catch {
+      body = null;
+    }
+
+    return { response, body };
+  };
+
+  let accessToken = await ensureAccessToken(false);
+  if (!accessToken) {
     throw new Error('Session expired. Please sign in again.');
   }
 
-  const response = await fetch(`${SB}/functions/v1/${name}`, {
-    method: 'POST',
-    headers: {
-      'apikey': ANON,
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${TOK}`,
-    },
-    body: JSON.stringify(payload),
-  });
-
-  let body = null;
-  try {
-    body = await response.json();
-  } catch {
-    body = null;
+  let { response, body } = await callOnce(accessToken);
+  const errorText = String(body?.error || body?.message || '').trim().toLowerCase();
+  if (response.status === 401 && (errorText.includes('jwt') || errorText.includes('token'))) {
+    const refreshedToken = await ensureAccessToken(true);
+    if (refreshedToken && refreshedToken !== accessToken) {
+      accessToken = refreshedToken;
+      ({ response, body } = await callOnce(accessToken));
+    }
   }
 
   if (!response.ok) {
