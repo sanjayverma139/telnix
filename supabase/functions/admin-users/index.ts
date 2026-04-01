@@ -55,13 +55,13 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization") || "";
     const body = await req.json().catch(() => ({}));
-    const forwardedUserJwt = body?._userJwt || "";
-    const accessToken = String(
-      forwardedUserJwt ||
-      authHeader.replace(/^Bearer\s+/i, "").trim()
-    ).trim();
-    if (!accessToken) {
-      return json({ error: "Missing access token." }, 401);
+    const forwardedUserJwt = String(body?.userJwt || "").trim();
+    if (!forwardedUserJwt) {
+      return json({ error: "Missing forwarded user session." }, 401);
+    }
+    const accessToken = forwardedUserJwt;
+    if (!authHeader.startsWith("Bearer ")) {
+      return json({ error: "Missing gateway bearer token." }, 401);
     }
 
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);

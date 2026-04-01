@@ -98,7 +98,7 @@ export async function invokeEdgeFunction(name, payload = {}) {
       },
       body: JSON.stringify({
         ...payload,
-        _userJwt: accessToken,
+        userJwt: accessToken,
       }),
     });
 
