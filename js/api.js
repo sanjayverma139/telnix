@@ -94,6 +94,7 @@ export async function invokeEdgeFunction(name, payload = {}) {
       headers: {
         'apikey': ANON,
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ANON}`,
       },
       body: JSON.stringify({
         ...payload,
