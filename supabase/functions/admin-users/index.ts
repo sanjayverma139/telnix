@@ -21,6 +21,32 @@ function getRole(user: any) {
   return String(role || "user").trim().toLowerCase();
 }
 
+async function resolveCaller(accessToken: string) {
+  const apiKey = SUPABASE_ANON_KEY || SUPABASE_SERVICE_ROLE_KEY;
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: {
+      apikey: apiKey,
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  let body: any = null;
+  try {
+    body = await res.json();
+  } catch {
+    body = null;
+  }
+
+  if (res.ok && body?.id) {
+    return { user: body, error: null };
+  }
+
+  return {
+    user: null,
+    error: body?.msg || body?.error_description || body?.error || `Auth lookup failed (${res.status})`,
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -40,37 +66,12 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    let callerData: any = null;
-    let callerError: any = null;
-
-    if (SUPABASE_ANON_KEY) {
-      const callerClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        global: {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      });
-      const result = await callerClient.auth.getUser();
-      callerData = result.data;
-      callerError = result.error;
+    const caller = await resolveCaller(accessToken);
+    if (caller.error || !caller.user) {
+      return json({ error: caller.error || "Unauthorized." }, 401);
     }
 
-    if (!callerData?.user) {
-      const fallback = await adminClient.auth.getUser(accessToken);
-      if (fallback.data?.user) {
-        callerData = fallback.data;
-        callerError = fallback.error;
-      } else if (!callerError) {
-        callerError = fallback.error;
-      }
-    }
-
-    if (callerError || !callerData?.user) {
-      return json({ error: callerError?.message || "Unauthorized." }, 401);
-    }
-
-    if (!["admin", "super_admin"].includes(getRole(callerData.user))) {
+    if (!["admin", "super_admin"].includes(getRole(caller.user))) {
       return json({ error: "Admin role required." }, 403);
     }
     const action = String(body?.action || "").trim().toLowerCase();
