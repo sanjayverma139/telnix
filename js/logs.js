@@ -4,7 +4,7 @@ import { $, esc, fmt, fmtF } from './utils.js';
 import { fetchLogs, PAGE_SIZE } from './api.js';
 import { setAllLogs, allLogs } from './state.js';
 import { showPage }           from './nav.js';
-import { ORG } from './config.js';
+import { ORG, ANON } from './config.js';
 import { sbf } from './api.js';
 
 const LOGS_FILTER_KEY = 'telnix_logs_filter_v1';
