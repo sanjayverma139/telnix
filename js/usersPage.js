@@ -15,7 +15,7 @@ renderAppShell({
         </div>
         <div style="margin-top:12px"><label>Password (optional)</label><input type="password" id="u-pass" placeholder="Leave blank to send invite email"></div>
         <button class="btn btn-primary" id="btn-create-user">+ Create / Invite User</button>
-        <p style="font-size:11px;color:#475569;margin-top:10px">This page calls the `admin-users` Supabase Edge Function. Leave password blank to send an invite email, or set one to create the account immediately.</p>
+        <p style="font-size:11px;color:#475569;margin-top:10px">This page calls the <code style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace">admin-users</code> Supabase Edge Function. Leave password blank to send an invite email, or set one to create the account immediately.</p>
       </div>
       <div class="card"><div class="card-title">All Users</div>
         <div class="tbl-wrap"><table><thead><tr><th>Email</th><th>Last Sign In</th><th>Total Logs</th><th></th></tr></thead>
