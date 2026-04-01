@@ -94,12 +94,12 @@ export async function invokeEdgeFunction(name, payload = {}) {
       headers: {
         'apikey': ANON,
         'Content-Type': 'application/json',
-        // Use the stable anon JWT for the Functions gateway and send the
-        // short-lived admin session separately for function-level auth.
         'Authorization': `Bearer ${ANON}`,
-        'x-user-jwt': accessToken,
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...payload,
+        _userJwt: accessToken,
+      }),
     });
 
     let body = null;

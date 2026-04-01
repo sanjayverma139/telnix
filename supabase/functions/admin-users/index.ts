@@ -5,7 +5,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-user-jwt",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 function json(body: unknown, status = 200) {
@@ -27,7 +27,8 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization") || "";
-    const forwardedUserJwt = req.headers.get("x-user-jwt") || "";
+    const body = await req.json().catch(() => ({}));
+    const forwardedUserJwt = body?._userJwt || "";
     const accessToken = String(
       forwardedUserJwt ||
       authHeader.replace(/^Bearer\s+/i, "").trim()
@@ -46,8 +47,6 @@ Deno.serve(async (req) => {
     if (!["admin", "super_admin"].includes(getRole(callerData.user))) {
       return json({ error: "Admin role required." }, 403);
     }
-
-    const body = await req.json().catch(() => ({}));
     const action = String(body?.action || "").trim().toLowerCase();
 
     if (action === "list_users") {
