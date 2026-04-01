@@ -1,7 +1,7 @@
 // urllists.js — URL Lists with pending/apply system + styled delete modal
 
 import { D, setEListType, setEListId, eListType, eListId } from './state.js';
-import { $, esc, showAlert, openModal, closeModal }         from './utils.js';
+import { $, esc, showAlert, openModal, closeModal, parseDomainLines } from './utils.js';
 import { saveData }                                         from './api.js';
 
 // ── Pending helpers ───────────────────────────────────────────────────────────
@@ -200,7 +200,17 @@ export async function saveList() {
     return;
   }
 
-  const listData = { name, description: $('lm-desc')?.value.trim()||'', domains: items };
+  const parsed = parseDomainLines(items.join('\n'));
+  if (parsed.invalid.length) {
+    showAlert('lm-al', 'error', `Invalid domain entries: ${parsed.invalid.slice(0, 3).join(', ')}`);
+    return;
+  }
+  if (!parsed.domains.length) {
+    showAlert('lm-al', 'error', 'Add at least one valid domain.');
+    return;
+  }
+
+  const listData = { name, description: $('lm-desc')?.value.trim()||'', domains: parsed.domains };
 
   if (_editingPendingULId) {
     const idx = (D.pendingUrlLists||[]).findIndex(p => p._pendingId === _editingPendingULId);

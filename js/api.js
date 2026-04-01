@@ -1,6 +1,6 @@
 // api.js — All Supabase REST API calls
 
-import { SB, ANON, ORG } from './config.js';
+import { SB, ANON, ORG, EDGE_FUNCTIONS } from './config.js';
 import { TOK, D }        from './state.js';
 
 function isJwtExpired(token) {
@@ -23,6 +23,35 @@ export async function sbf(path, opts = {}) {
     ...(opts.headers || {}),
   };
   return fetch(SB + path, { ...opts, headers });
+}
+
+export async function invokeEdgeFunction(name, payload = {}) {
+  if (!TOK || isJwtExpired(TOK)) {
+    throw new Error('Session expired. Please sign in again.');
+  }
+
+  const response = await fetch(`${SB}/functions/v1/${name}`, {
+    method: 'POST',
+    headers: {
+      'apikey': ANON,
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${TOK}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  let body = null;
+  try {
+    body = await response.json();
+  } catch {
+    body = null;
+  }
+
+  if (!response.ok) {
+    throw new Error(body?.error || body?.message || `Request failed (${response.status})`);
+  }
+
+  return body;
 }
 
 export async function loadData() {
@@ -114,8 +143,20 @@ export async function fetchDashStats() {
 }
 
 export async function fetchAuthUsers() {
-  // Auth admin endpoints require a service role key, which must not live in a public page.
-  return null;
+  try {
+    const result = await invokeEdgeFunction(EDGE_FUNCTIONS.adminUsers, { action: 'list_users' });
+    return Array.isArray(result?.users) ? result.users : [];
+  } catch (err) {
+    console.warn('[API] fetchAuthUsers fallback:', err.message);
+    return null;
+  }
+}
+
+export async function createAuthUser(userData) {
+  return invokeEdgeFunction(EDGE_FUNCTIONS.adminUsers, {
+    action: 'create_user',
+    ...userData,
+  });
 }
 
 export async function fetchUserLogMap() {

@@ -3,6 +3,9 @@
 export const SB   = 'https://nsauxvxopajdsgglcvpk.supabase.co';
 export const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zYXV4dnhvcGFqZHNnZ2xjdnBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDYyNDIsImV4cCI6MjA4OTQyMjI0Mn0.YMblltS5nm9TIRRi_ysciAJoO4zljnlTTfJRBONnBxw';
 export const ORG  = '4c0a98ac-c971-4d04-9e51-655f323b512e';
+export const EDGE_FUNCTIONS = {
+  adminUsers: 'admin-users',
+};
 
 export const ALL_CATS = [
   'social','news','productivity','shopping','entertainment','education',

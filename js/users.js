@@ -5,9 +5,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { $, esc, fmtF, showAlert } from './utils.js';
-import { fetchAuthUsers, fetchUserLogMap } from './api.js';
+import { createAuthUser, fetchAuthUsers, fetchUserLogMap } from './api.js';
 
 const LOGS_FILTER_KEY = 'telnix_logs_filter_v1';
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
 
 export async function loadUsers() {
   $('users-tb').innerHTML = '<tr><td colspan="4" class="loading">Loading...</td></tr>';
@@ -41,11 +42,55 @@ export async function loadUsers() {
 }
 
 export function initUsers() {
-  // User creation must go through Supabase dashboard or an Edge Function
-  $('btn-create-user')?.addEventListener('click', () => {
-    showAlert('u-al', 'error',
-      'User creation requires the Supabase dashboard (Auth → Users → Invite) or a backend Edge Function. ' +
-      'The service role key cannot be placed in a public page for security reasons.');
+  $('btn-create-user')?.addEventListener('click', async () => {
+    const email = ($('u-email')?.value || '').trim().toLowerCase();
+    const password = ($('u-pass')?.value || '').trim();
+    const role = ($('u-role')?.value || 'user').trim().toLowerCase();
+    const button = $('btn-create-user');
+
+    if (!EMAIL_RE.test(email)) {
+      showAlert('u-al', 'error', 'Enter a valid email address.');
+      return;
+    }
+    if (!['user', 'admin'].includes(role)) {
+      showAlert('u-al', 'error', 'Choose a valid role.');
+      return;
+    }
+    if (password && password.length < 8) {
+      showAlert('u-al', 'error', 'Password must be at least 8 characters, or leave it blank to send an invite.');
+      return;
+    }
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Creating...';
+    }
+
+    try {
+      const result = await createAuthUser({
+        email,
+        password: password || null,
+        role,
+      });
+      if ($('u-email')) $('u-email').value = '';
+      if ($('u-pass')) $('u-pass').value = '';
+      if ($('u-role')) $('u-role').value = 'user';
+      showAlert(
+        'u-al',
+        'success',
+        result?.mode === 'invite'
+          ? `Invite sent to ${email} with ${role} role.`
+          : `User ${email} created with ${role} role.`
+      );
+      await loadUsers();
+    } catch (err) {
+      showAlert('u-al', 'error', err.message || 'User creation failed.');
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = '+ Create / Invite User';
+      }
+    }
   });
 
   // Expose filter helper to inline onclick handlers

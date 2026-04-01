@@ -11,10 +11,11 @@ renderAppShell({
         <div class="alert" id="u-al"></div>
         <div class="grid2">
           <div><label>Email *</label><input type="email" id="u-email" placeholder="user@company.com"></div>
-          <div><label>Password *</label><input type="password" id="u-pass" placeholder="Set a password"></div>
+          <div><label>Role *</label><select id="u-role"><option value="user">User</option><option value="admin">Admin</option></select></div>
         </div>
-        <button class="btn btn-primary" id="btn-create-user">+ Create User</button>
-        <p style="font-size:11px;color:#475569;margin-top:10px">User creation requires the <a href="https://supabase.com/dashboard" target="_blank" style="color:#818cf8">Supabase Dashboard</a> -> Authentication -> Users -> Invite user.</p>
+        <div style="margin-top:12px"><label>Password (optional)</label><input type="password" id="u-pass" placeholder="Leave blank to send invite email"></div>
+        <button class="btn btn-primary" id="btn-create-user">+ Create / Invite User</button>
+        <p style="font-size:11px;color:#475569;margin-top:10px">This page calls the `admin-users` Supabase Edge Function. Leave password blank to send an invite email, or set one to create the account immediately.</p>
       </div>
       <div class="card"><div class="card-title">All Users</div>
         <div class="tbl-wrap"><table><thead><tr><th>Email</th><th>Last Sign In</th><th>Total Logs</th><th></th></tr></thead>

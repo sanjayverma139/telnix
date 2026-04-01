@@ -8,16 +8,52 @@ import { D }        from './state.js';
 import { showPage } from './nav.js';
 
 const SESSION_KEY = 'telnix_admin_session_v1';
+const AUTH_NOTICE_KEY = 'telnix_admin_notice_v1';
+
+function decodeJwtPayload(token) {
+  if (!token || token.split('.').length < 2) return null;
+  try {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(base64));
+  } catch {
+    return null;
+  }
+}
 
 function isJwtExpired(token) {
-  if (!token || token.split('.').length < 2) return false;
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    if (!payload?.exp) return false;
-    return payload.exp * 1000 <= Date.now() + 30000;
-  } catch {
-    return false;
-  }
+  const payload = decodeJwtPayload(token);
+  if (!payload?.exp) return false;
+  return payload.exp * 1000 <= Date.now() + 30000;
+}
+
+function getRoleFromPayload(payload) {
+  const role = payload?.user_metadata?.role || payload?.app_metadata?.role || payload?.role || 'user';
+  return String(role || 'user').trim().toLowerCase();
+}
+
+function getRoleFromToken(token) {
+  return getRoleFromPayload(decodeJwtPayload(token));
+}
+
+function isAdminRole(role) {
+  return ['admin', 'super_admin'].includes(String(role || '').trim().toLowerCase());
+}
+
+function persistAuthNotice(message) {
+  sessionStorage.setItem(AUTH_NOTICE_KEY, message);
+}
+
+function consumeAuthNotice() {
+  const message = sessionStorage.getItem(AUTH_NOTICE_KEY) || '';
+  if (message) sessionStorage.removeItem(AUTH_NOTICE_KEY);
+  return message;
+}
+
+function showAuthNotice() {
+  const message = consumeAuthNotice();
+  if (!message || !$('l-err')) return;
+  $('l-err').textContent = message;
+  $('l-err').style.display = 'block';
 }
 
 function normalizePolicyPayload(payload) {
@@ -110,6 +146,7 @@ async function refreshPersistedSession(session) {
       accessToken: d.access_token,
       refreshToken: d.refresh_token || session.refreshToken,
       email: d.user?.email || session.email || '',
+      role: getRoleFromToken(d.access_token),
     };
     persistSession(next);
     setTOK(next.accessToken);
@@ -123,6 +160,10 @@ async function ensureSession() {
   const session = readPersistedSession();
   if (!session?.accessToken) return null;
   if (!isJwtExpired(session.accessToken)) {
+    if (!session.role) {
+      session.role = getRoleFromToken(session.accessToken);
+      persistSession(session);
+    }
     setTOK(session.accessToken);
     return session;
   }
@@ -167,6 +208,7 @@ export function initAuth() {
   $('l-email')?.addEventListener('keydown', e => { if (e.key === 'Enter') $('l-pass')?.focus(); });
   $('l-pass')?.addEventListener('keydown',  e => { if (e.key === 'Enter') doLogin(); });
   $('logout-btn')?.addEventListener('click', doLogout);
+  showAuthNotice();
   restoreIndexSession();
 }
 
@@ -188,11 +230,22 @@ async function doLogin() {
       return;
     }
 
+    const role = getRoleFromToken(d.access_token);
+    if (!isAdminRole(role)) {
+      setTOK(null);
+      clearPersistedSession();
+      err.textContent = 'Admin access required for this panel.';
+      err.style.display = 'block';
+      $('l-btn').disabled = false; $('l-btn').textContent = 'Sign In';
+      return;
+    }
+
     setTOK(d.access_token);
     persistSession({
       accessToken: d.access_token,
       refreshToken: d.refresh_token,
       email: d.user.email,
+      role,
     });
     showAuthenticatedUi(d.user.email);
     await hydrateAppState();
@@ -234,6 +287,13 @@ async function doLogout() {
 async function restoreIndexSession() {
   const session = await ensureSession();
   if (!session?.accessToken) return;
+  if (!isAdminRole(session.role || getRoleFromToken(session.accessToken))) {
+    setTOK(null);
+    clearPersistedSession();
+    persistAuthNotice('Your account is signed in, but it does not have admin access.');
+    showAuthNotice();
+    return;
+  }
 
   if (isLegacyIndexShell()) {
     location.href = './dashboard.html';
@@ -251,6 +311,13 @@ export async function requireSession(redirectTo = './index.html') {
   const session = await ensureSession();
   if (!session?.accessToken) {
     clearPersistedSession();
+    location.href = redirectTo;
+    return null;
+  }
+  if (!isAdminRole(session.role || getRoleFromToken(session.accessToken))) {
+    setTOK(null);
+    clearPersistedSession();
+    persistAuthNotice('Your account is signed in, but it does not have admin access.');
     location.href = redirectTo;
     return null;
   }

@@ -2,7 +2,7 @@
 
 import { ALL_CATS }                     from './config.js';
 import { D, setECCId, eCCId }           from './state.js';
-import { $, esc, showAlert, openModal, closeModal } from './utils.js';
+import { $, esc, showAlert, openModal, closeModal, parseDomainLines } from './utils.js';
 import { saveData }                     from './api.js';
 
 // ── Pending helpers ───────────────────────────────────────────────────────────
@@ -251,15 +251,22 @@ export function openCCModal(id=null, pendingId=null) {
 export async function saveCC() {
   const name = $('cc-name')?.value.trim();
   if (!name) { showAlert('cc-al','error','Name required'); return; }
+  const domainResult = parseDomainLines($('cc-domains')?.value||'');
+  const exclusionResult = parseDomainLines($('cc-excl-urls')?.value||'');
+  const invalidDomains = [...domainResult.invalid, ...exclusionResult.invalid];
+  if (invalidDomains.length) {
+    showAlert('cc-al','error',`Invalid domain entries: ${invalidDomains.slice(0,3).join(', ')}`);
+    return;
+  }
 
   const catData = {
     name,
     description:          $('cc-desc')?.value.trim()||'',
-    domains:              ($('cc-domains')?.value||'').split('\n').map(s=>s.trim().toLowerCase()).filter(Boolean),
+    domains:              domainResult.domains,
     predefinedCategories: _ddPredCats?.getSelected()  || [],
     urlListIds:           _ddUrlLists?.getSelected()  || [],
     exclusionListIds:     _ddExclLists?.getSelected() || [],
-    exclusionUrls:        ($('cc-excl-urls')?.value||'').split('\n').map(s=>s.trim().toLowerCase()).filter(Boolean),
+    exclusionUrls:        exclusionResult.domains,
   };
 
   if (_editingPendingCCId) {

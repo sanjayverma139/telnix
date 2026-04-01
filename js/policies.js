@@ -3,7 +3,7 @@
 import { ALL_CATS, THREAT_CATEGORIES, DAYS } from './config.js';
 import { D, setCurAct, setCurActiv, setCurType,
          setEPolId, curAct, curActiv, curType, ePolId } from './state.js';
-import { $, esc, showAlert, openModal, closeModal } from './utils.js';
+import { $, esc, showAlert, openModal, closeModal, parseDomainLines } from './utils.js';
 import { saveData, loadData } from './api.js';
 
 
@@ -567,13 +567,23 @@ function collectPolData(){
   const customCatIds=allCatSel.filter(id=>!ALL_CATS.includes(id));
   const listIds=_ddList?.getSelected()||[];
   const comboListIds=_ddComboList?.getSelected()||[];
-  const doms=($('pm-doms')?.value||'').split('\n').map(s=>s.trim().toLowerCase().replace(/^www\./,'')).filter(Boolean);
-  const comboDoms=($('pm-combo-doms')?.value||'').split('\n').map(s=>s.trim().toLowerCase().replace(/^www\./,'')).filter(Boolean);
+  const domainResult=parseDomainLines($('pm-doms')?.value||'');
+  const comboDomainResult=parseDomainLines($('pm-combo-doms')?.value||'');
+  const doms=domainResult.domains;
+  const comboDoms=comboDomainResult.domains;
+  const invalidDomains=[...domainResult.invalid,...comboDomainResult.invalid];
+  if(invalidDomains.length){showAlert('pm-al','error',`Invalid domain entries: ${invalidDomains.slice(0,3).join(', ')}`);return null;}
+  if(curType==='domain'&&doms.length===0){showAlert('pm-al','error','At least one domain is required.');return null;}
+  if(curType==='list'&&listIds.length===0){showAlert('pm-al','error','Select at least one URL list.');return null;}
+  if(curType==='category'&&predCatIds.length===0&&customCatIds.length===0){showAlert('pm-al','error','Select at least one category.');return null;}
+  if(curType==='customcat'&&customCatIds.length===0){showAlert('pm-al','error','Select at least one custom category.');return null;}
+  if(curType==='combo'&&comboDoms.length===0&&comboListIds.length===0&&predCatIds.length===0&&customCatIds.length===0){showAlert('pm-al','error','Add at least one domain, list, or category for a combo policy.');return null;}
+  const scoreThreshold=Math.max(0,Math.min(100,parseInt($('pm-sthr')?.value||55,10)||55));
   const conditions={};
   if(curType==='domain')    conditions.domains=doms;
   if(curType==='category')  {conditions.categories=predCatIds;conditions.customCategoryIds=customCatIds;}
   if(curType==='list')      conditions.listIds=listIds;
-  if(curType==='threat')    {conditions.scoreOp=$('pm-sop')?.value;conditions.scoreThreshold=parseInt($('pm-sthr')?.value||55);}
+  if(curType==='threat')    {conditions.scoreOp=$('pm-sop')?.value;conditions.scoreThreshold=scoreThreshold;}
   if(curType==='reputation')conditions.requireKnownMalicious=true;
   if(curType==='customcat') conditions.customCategoryIds=customCatIds;
   if(curType==='combo')     {conditions.domains=comboDoms;conditions.categories=predCatIds;conditions.listIds=comboListIds;}
