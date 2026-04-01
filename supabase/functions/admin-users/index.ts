@@ -26,8 +26,20 @@ async function resolveCaller(accessToken: string) {
     return { user: null, error: "Supabase anon key is unavailable in Edge Function env." };
   }
 
-  const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const { data, error } = await authClient.auth.getUser(accessToken);
+  const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+
+  const { data, error } = await authClient.auth.getUser();
   if (error || !data?.user) {
     return { user: null, error: error?.message || "Unauthorized." };
   }
