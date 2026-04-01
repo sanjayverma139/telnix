@@ -1,7 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
-const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 const corsHeaders = {
@@ -31,15 +30,16 @@ Deno.serve(async (req) => {
     if (!authHeader.startsWith("Bearer ")) {
       return json({ error: "Missing bearer token." }, 401);
     }
+    const accessToken = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!accessToken) {
+      return json({ error: "Missing access token." }, 401);
+    }
 
-    const callerClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { data: callerData, error: callerError } = await callerClient.auth.getUser();
+    const { data: callerData, error: callerError } = await adminClient.auth.getUser(accessToken);
     if (callerError || !callerData.user) {
-      return json({ error: "Unauthorized." }, 401);
+      return json({ error: callerError?.message || "Unauthorized." }, 401);
     }
 
     if (!["admin", "super_admin"].includes(getRole(callerData.user))) {
