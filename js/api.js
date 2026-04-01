@@ -135,7 +135,38 @@ export const PAGE_SIZE = 100;
 
 export async function fetchLogs(filters = {}, page = 0) {
   const offset = page * PAGE_SIZE;
-  let url = `/rest/v1/activity_logs?org_id=eq.${ORG}&order=ts.desc`;
+  const selectCols = [
+    'id',
+    'ts',
+    'user_email',
+    'domain',
+    'url',
+    'action',
+    'activity',
+    'reason',
+    'policy_name',
+    'group_name',
+    'category',
+    'threat_score',
+    'known_malicious',
+    'download_filename',
+    'upload_filename',
+    'file_count',
+    'total_size',
+    'upload_type',
+    'upload_blocked',
+    'proceeded',
+    'created_at',
+    'initiator',
+    'xhr_method',
+    'xhr_risk',
+    'xhr_has_file',
+    'xhr_size',
+    'xhr_content_type',
+    'page_domain',
+    'local_id',
+  ].join(',');
+  let url = `/rest/v1/activity_logs?select=${encodeURIComponent(selectCols)}&org_id=eq.${ORG}&order=ts.desc`;
 
   // Date range
   if (filters.tsFrom) url += `&ts=gte.${filters.tsFrom}`;
@@ -153,18 +184,16 @@ export async function fetchLogs(filters = {}, page = 0) {
   if (filters.users?.length === 1)   url += `&user_email=eq.${encodeURIComponent(filters.users[0])}`;
   else if (filters.users?.length > 1) url += `&user_email=in.(${filters.users.map(u=>`"${u}"`).join(',')})`;
 
-  // Count total
-  // Get total count — use head=true with count=exact
-  const countRes = await sbf(url, {
-    method: 'HEAD',
-    headers: { 'Prefer': 'count=exact' }
+  const r = await sbf(url + `&limit=${PAGE_SIZE}&offset=${offset}`, {
+    headers: { Prefer: 'count=exact' },
   });
-  const totalCount = parseInt(countRes.headers?.get?.('content-range')?.split('/')?.[1] || '0', 10) || 0;
-
-  // Fetch page
-  const r = await sbf(url + `&limit=${PAGE_SIZE}&offset=${offset}`);
-  if (!r.ok) return { logs: [], total: 0 };
+  if (!r.ok) {
+    const text = await r.text().catch(() => '');
+    console.warn('[API] fetchLogs failed:', r.status, text);
+    return { logs: [], total: 0 };
+  }
   let logs = await r.json();
+  const totalCount = parseInt(r.headers?.get?.('content-range')?.split('/')?.[1] || '0', 10) || logs.length || 0;
 
   // Client-side filters
   if (filters.search) logs = logs.filter(l =>

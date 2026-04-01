@@ -60,11 +60,19 @@ export async function loadLogs() {
   if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="loading">Loading...</td></tr>';
   renderPagination(0, 0);
 
-  const { logs, total } = await fetchLogs(buildFilters(), currentPage);
-  totalLogs = total;
-  setAllLogs(logs);
-  renderLogTable(logs);
-  renderPagination(currentPage, total);
+  try {
+    const { logs, total } = await fetchLogs(buildFilters(), currentPage);
+    totalLogs = total;
+    setAllLogs(logs);
+    renderLogTable(logs);
+    renderPagination(currentPage, total);
+  } catch (error) {
+    console.error('[Logs] loadLogs failed:', error);
+    totalLogs = 0;
+    setAllLogs([]);
+    if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="loading">Could not load logs</td></tr>';
+    renderPagination(0, 0);
+  }
 }
 
 // ── Table ─────────────────────────────────────────────────────────────────────
