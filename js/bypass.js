@@ -8,8 +8,7 @@
 
 import { D }                  from './state.js';
 import { $, esc, fmtF, showAlert } from './utils.js';
-import { saveData, sbf }      from './api.js';
-import { ORG }                from './config.js';
+import { saveData, fetchKnownUserEmails } from './api.js';
 
 const FORTY_FIVE_DAYS_MS = 45 * 24 * 60 * 60 * 1000;
 
@@ -70,12 +69,7 @@ function statusBadge(token) {
 // ── Populate user dropdown from activity_logs ─────────────────────────────────
 export async function loadBypassUserOptions() {
   try {
-    const r = await sbf(`/rest/v1/activity_logs?org_id=eq.${ORG}&select=user_email&limit=5000`);
-    if (!r.ok) return;
-    const rows = await r.json();
-    const emails = [...new Set(
-      rows.map(r => (r.user_email || '').trim().toLowerCase()).filter(Boolean)
-    )].sort();
+    const emails = await fetchKnownUserEmails();
     const sel = $('bp-user');
     if (!sel) return;
     // Remove any previous dynamically added options (keep the "any user" default)

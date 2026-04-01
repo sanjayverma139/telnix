@@ -133,85 +133,74 @@ export async function saveData() {
 
 export const PAGE_SIZE = 100;
 
+async function fetchAdminLogs(limit = 5000) {
+  const session = readPersistedSession();
+  if (!session?.sessionToken) throw new Error('Session expired. Please sign in again.');
+  const result = await rpc('telnix_admin_fetch_logs', {
+    p_session_token: session.sessionToken,
+    p_org_id: ORG,
+    p_limit: limit,
+  });
+  if (!result?.ok) {
+    throw new Error(result?.error || 'Could not load activity logs.');
+  }
+  return Array.isArray(result?.logs) ? result.logs : [];
+}
+
+function filterLogs(logs, filters = {}) {
+  let out = Array.isArray(logs) ? [...logs] : [];
+
+  if (filters.tsFrom != null) out = out.filter(l => Number(l?.ts || 0) >= Number(filters.tsFrom));
+  if (filters.tsTo != null) out = out.filter(l => Number(l?.ts || 0) <= Number(filters.tsTo));
+
+  if (filters.actions?.length) {
+    const actionSet = new Set(filters.actions.map(v => String(v || '').toLowerCase()));
+    out = out.filter(l => actionSet.has(String(l?.action || '').toLowerCase()));
+  }
+
+  if (filters.activities?.length) {
+    const activitySet = new Set(filters.activities.map(v => String(v || '').toLowerCase()));
+    out = out.filter(l => activitySet.has(String(l?.activity || '').toLowerCase()));
+  }
+
+  if (filters.users?.length) {
+    const userSet = new Set(filters.users.map(v => String(v || '').toLowerCase()));
+    out = out.filter(l => userSet.has(String(l?.user_email || '').toLowerCase()));
+  }
+
+  if (filters.search) {
+    const needle = String(filters.search || '').toLowerCase();
+    out = out.filter(l =>
+      String(l?.domain || '').toLowerCase().includes(needle) ||
+      String(l?.user_email || '').toLowerCase().includes(needle) ||
+      String(l?.url || '').toLowerCase().includes(needle)
+    );
+  }
+
+  if (filters.knownMalicious) out = out.filter(l => l?.known_malicious === true);
+  if (filters.highRisk) out = out.filter(l => Number(l?.threat_score || 0) >= 55);
+  if (filters.medRisk) out = out.filter(l => {
+    const score = Number(l?.threat_score || 0);
+    return score >= 30 && score < 55;
+  });
+
+  return out;
+}
+
 export async function fetchLogs(filters = {}, page = 0) {
   const offset = page * PAGE_SIZE;
-  const selectCols = [
-    'id',
-    'ts',
-    'user_email',
-    'domain',
-    'url',
-    'action',
-    'activity',
-    'reason',
-    'policy_name',
-    'group_name',
-    'category',
-    'threat_score',
-    'known_malicious',
-    'download_filename',
-    'upload_filename',
-    'file_count',
-    'total_size',
-    'upload_type',
-    'upload_blocked',
-    'proceeded',
-    'created_at',
-    'initiator',
-    'xhr_method',
-    'xhr_risk',
-    'xhr_has_file',
-    'xhr_size',
-    'xhr_content_type',
-    'page_domain',
-    'local_id',
-  ].join(',');
-  let url = `/rest/v1/activity_logs?select=${encodeURIComponent(selectCols)}&org_id=eq.${ORG}&order=ts.desc`;
-
-  // Date range
-  if (filters.tsFrom) url += `&ts=gte.${filters.tsFrom}`;
-  if (filters.tsTo)   url += `&ts=lte.${filters.tsTo}`;
-
-  // Multi-value action filter — Supabase supports action=in.(block,warn)
-  if (filters.actions?.length === 1)   url += `&action=eq.${filters.actions[0]}`;
-  else if (filters.actions?.length > 1) url += `&action=in.(${filters.actions.join(',')})`;
-
-  // Multi-value activity filter
-  if (filters.activities?.length === 1)   url += `&activity=eq.${filters.activities[0]}`;
-  else if (filters.activities?.length > 1) url += `&activity=in.(${filters.activities.join(',')})`;
-
-  // Multi-user filter
-  if (filters.users?.length === 1)   url += `&user_email=eq.${encodeURIComponent(filters.users[0])}`;
-  else if (filters.users?.length > 1) url += `&user_email=in.(${filters.users.map(u=>`"${u}"`).join(',')})`;
-
-  const r = await sbf(url + `&limit=${PAGE_SIZE}&offset=${offset}`, {
-    headers: { Prefer: 'count=exact' },
-  });
-  if (!r.ok) {
-    const text = await r.text().catch(() => '');
-    console.warn('[API] fetchLogs failed:', r.status, text);
-    return { logs: [], total: 0 };
-  }
-  let logs = await r.json();
-  const totalCount = parseInt(r.headers?.get?.('content-range')?.split('/')?.[1] || '0', 10) || logs.length || 0;
-
-  // Client-side filters
-  if (filters.search) logs = logs.filter(l =>
-    (l.domain||'').toLowerCase().includes(filters.search) ||
-    (l.user_email||'').toLowerCase().includes(filters.search) ||
-    (l.url||'').toLowerCase().includes(filters.search));
-  if (filters.knownMalicious) logs = logs.filter(l => l.known_malicious === true);
-  if (filters.highRisk)       logs = logs.filter(l => (l.threat_score||0) >= 55);
-  if (filters.medRisk)        logs = logs.filter(l => (l.threat_score||0) >= 30 && (l.threat_score||0) < 55);
-
-  return { logs, total: totalCount };
+  const allLogs = await fetchAdminLogs(5000);
+  const filteredLogs = filterLogs(allLogs, filters);
+  return {
+    logs: filteredLogs.slice(offset, offset + PAGE_SIZE),
+    total: filteredLogs.length,
+  };
 }
 
 export async function fetchDashStats() {
   const since = Date.now() - 86400000;
-  const r = await sbf(`/rest/v1/activity_logs?org_id=eq.${ORG}&ts=gte.${since}&order=ts.desc&limit=500`);
-  if (!r.ok) return [];
-  return r.json();
+  const logs = await fetchAdminLogs(1000);
+  return logs.filter(l => Number(l?.ts || 0) >= since);
 }
 
 export async function fetchAuthUsers() {
@@ -254,9 +243,7 @@ export async function createAuthUser(userData) {
 }
 
 export async function fetchUserLogMap() {
-  const r = await sbf(`/rest/v1/activity_logs?org_id=eq.${ORG}&select=user_email,ts&order=ts.desc&limit=5000`);
-  if (!r.ok) return {};
-  const logs = await r.json();
+  const logs = await fetchAdminLogs(5000).catch(() => []);
   const map = {};
   for (const l of logs) {
     if (!l.user_email) continue;
@@ -265,4 +252,13 @@ export async function fetchUserLogMap() {
     if (l.ts > map[l.user_email].last) map[l.user_email].last = l.ts;
   }
   return map;
+}
+
+export async function fetchKnownUserEmails() {
+  const logs = await fetchAdminLogs(5000).catch(() => []);
+  return [...new Set(
+    logs
+      .map(l => String(l?.user_email || '').trim().toLowerCase())
+      .filter(Boolean)
+  )].sort();
 }

@@ -345,8 +345,92 @@ begin
 end;
 $$;
 
+create or replace function public.telnix_admin_fetch_logs(
+  p_session_token text,
+  p_org_id uuid,
+  p_limit integer default 5000
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_admin record;
+  v_logs jsonb;
+  v_limit integer := greatest(1, least(coalesce(p_limit, 5000), 10000));
+begin
+  select
+    u.id,
+    u.org_id,
+    u.email,
+    u.role
+    into v_admin
+    from public.telnix_app_sessions s
+    join public.telnix_app_users u on u.id = s.user_id
+   where s.session_token = trim(coalesce(p_session_token, ''))
+     and s.expires_at > now()
+     and u.is_active = true
+     and u.role = 'admin'
+   limit 1;
+
+  if not found then
+    return jsonb_build_object('ok', false, 'error', 'Admin session required.');
+  end if;
+
+  if p_org_id is not null and v_admin.org_id <> p_org_id then
+    return jsonb_build_object('ok', false, 'error', 'Admin session does not match this organisation.');
+  end if;
+
+  select coalesce(
+    jsonb_agg(to_jsonb(l) order by l.ts desc),
+    '[]'::jsonb
+  )
+    into v_logs
+    from (
+      select
+        id,
+        ts,
+        user_email,
+        domain,
+        url,
+        action,
+        activity,
+        reason,
+        policy_name,
+        group_name,
+        category,
+        threat_score,
+        known_malicious,
+        download_filename,
+        upload_filename,
+        file_count,
+        total_size,
+        upload_type,
+        upload_blocked,
+        proceeded,
+        created_at,
+        initiator,
+        xhr_method,
+        xhr_risk,
+        xhr_has_file,
+        xhr_size,
+        xhr_content_type,
+        page_domain,
+        local_id
+      from public.activity_logs
+      where org_id = coalesce(p_org_id, v_admin.org_id)
+      order by ts desc
+      limit v_limit
+    ) l;
+
+  return jsonb_build_object('ok', true, 'logs', v_logs);
+end;
+$$;
+
 grant execute on function public.telnix_app_login(uuid, text, text, text) to anon, authenticated;
 grant execute on function public.telnix_app_validate_session(text, text) to anon, authenticated;
 grant execute on function public.telnix_app_logout(text) to anon, authenticated;
 grant execute on function public.telnix_admin_list_users(text, uuid) to anon, authenticated;
 grant execute on function public.telnix_admin_upsert_user(text, uuid, text, text, text, boolean) to anon, authenticated;
+grant execute on function public.telnix_admin_fetch_logs(text, uuid, integer) to anon, authenticated;

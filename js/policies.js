@@ -4,7 +4,7 @@ import { ALL_CATS, THREAT_CATEGORIES, DAYS } from './config.js';
 import { D, setCurAct, setCurActiv, setCurType,
          setEPolId, curAct, curActiv, curType, ePolId } from './state.js';
 import { $, esc, showAlert, openModal, closeModal, parseDomainLines } from './utils.js';
-import { saveData, loadData } from './api.js';
+import { saveData, loadData, fetchKnownUserEmails } from './api.js';
 
 
 const TC = {
@@ -646,16 +646,8 @@ export async function pushAll(){
 
 // ── Source dropdowns ─────────────────────────────────────────────────────────
 async function buildSourceDropdowns(selectedUsers=[], selectedGroups=[]) {
-  // Get known users from activity logs
   try {
-    const { sbf }   = await import('./api.js');
-    const { ORG }   = await import('./config.js');
-    const r = await sbf(`/rest/v1/activity_logs?org_id=eq.${ORG}&select=user_email&limit=500`);
-    let userEmails = [];
-    if (r.ok) {
-      const rows = await r.json();
-      userEmails = [...new Set(rows.map(l=>l.user_email).filter(Boolean))].sort();
-    }
+    const userEmails = await fetchKnownUserEmails();
     const userItems  = userEmails.map(e => ({ id:e, name:e }));
     let groupItems = [];
     try {

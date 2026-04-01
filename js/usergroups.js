@@ -1,7 +1,7 @@
 // usergroups.js — User Groups page (create groups, manage members)
 
 import { $, esc, showAlert, openModal, closeModal } from './utils.js';
-import { sbf }                                       from './api.js';
+import { sbf, fetchKnownUserEmails }                 from './api.js';
 import { ORG }                                       from './config.js';
 import { D }                                         from './state.js';
 
@@ -122,13 +122,7 @@ function renderMemberChips() {
 }
 
 async function buildMemberDropdown() {
-  // Get known emails from activity logs (last 200 distinct)
-  const r = await sbf(`/rest/v1/activity_logs?org_id=eq.${ORG}&select=user_email&limit=500`);
-  let emails = [];
-  if (r.ok) {
-    const rows = await r.json();
-    emails = [...new Set(rows.map(l => l.user_email).filter(Boolean))].sort();
-  }
+  const emails = await fetchKnownUserEmails().catch(() => []);
 
   const dd  = $('ug-member-dd'); if (!dd) return;
   const q   = $('ug-member-search')?.value.toLowerCase() || '';
