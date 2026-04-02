@@ -345,6 +345,112 @@ begin
 end;
 $$;
 
+create or replace function public.telnix_admin_get_payload(
+  p_session_token text,
+  p_org_id uuid
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_admin record;
+  v_payload jsonb;
+begin
+  select
+    u.id,
+    u.org_id,
+    u.email,
+    u.role
+    into v_admin
+    from public.telnix_app_sessions s
+    join public.telnix_app_users u on u.id = s.user_id
+   where s.session_token = trim(coalesce(p_session_token, ''))
+     and s.expires_at > now()
+     and u.is_active = true
+     and u.role = 'admin'
+   limit 1;
+
+  if not found then
+    return jsonb_build_object('ok', false, 'error', 'Admin session required.');
+  end if;
+
+  if p_org_id is not null and v_admin.org_id <> p_org_id then
+    return jsonb_build_object('ok', false, 'error', 'Admin session does not match this organisation.');
+  end if;
+
+  select p.payload
+    into v_payload
+    from public.policies p
+   where p.org_id = coalesce(p_org_id, v_admin.org_id)
+   order by p.updated_at desc nulls last, p.id desc
+   limit 1;
+
+  return jsonb_build_object('ok', true, 'payload', coalesce(v_payload, '{}'::jsonb));
+end;
+$$;
+
+create or replace function public.telnix_admin_save_payload(
+  p_session_token text,
+  p_org_id uuid,
+  p_payload jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_admin record;
+  v_policy_id bigint;
+  v_version bigint := floor(extract(epoch from now()));
+begin
+  select
+    u.id,
+    u.org_id,
+    u.email,
+    u.role
+    into v_admin
+    from public.telnix_app_sessions s
+    join public.telnix_app_users u on u.id = s.user_id
+   where s.session_token = trim(coalesce(p_session_token, ''))
+     and s.expires_at > now()
+     and u.is_active = true
+     and u.role = 'admin'
+   limit 1;
+
+  if not found then
+    return jsonb_build_object('ok', false, 'error', 'Admin session required.');
+  end if;
+
+  if p_org_id is not null and v_admin.org_id <> p_org_id then
+    return jsonb_build_object('ok', false, 'error', 'Admin session does not match this organisation.');
+  end if;
+
+  select p.id
+    into v_policy_id
+    from public.policies p
+   where p.org_id = coalesce(p_org_id, v_admin.org_id)
+   order by p.updated_at desc nulls last, p.id desc
+   limit 1;
+
+  if v_policy_id is null then
+    insert into public.policies (org_id, payload, version)
+    values (coalesce(p_org_id, v_admin.org_id), coalesce(p_payload, '{}'::jsonb), v_version)
+    returning id into v_policy_id;
+  else
+    update public.policies
+       set payload = coalesce(p_payload, '{}'::jsonb),
+           version = v_version,
+           updated_at = now()
+     where id = v_policy_id;
+  end if;
+
+  return jsonb_build_object('ok', true, 'id', v_policy_id, 'version', v_version);
+end;
+$$;
+
 create or replace function public.telnix_admin_fetch_logs(
   p_session_token text,
   p_org_id uuid,
@@ -433,4 +539,6 @@ grant execute on function public.telnix_app_validate_session(text, text) to anon
 grant execute on function public.telnix_app_logout(text) to anon, authenticated;
 grant execute on function public.telnix_admin_list_users(text, uuid) to anon, authenticated;
 grant execute on function public.telnix_admin_upsert_user(text, uuid, text, text, text, boolean) to anon, authenticated;
+grant execute on function public.telnix_admin_get_payload(text, uuid) to anon, authenticated;
+grant execute on function public.telnix_admin_save_payload(text, uuid, jsonb) to anon, authenticated;
 grant execute on function public.telnix_admin_fetch_logs(text, uuid, integer) to anon, authenticated;

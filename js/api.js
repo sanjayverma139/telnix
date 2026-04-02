@@ -99,10 +99,17 @@ export async function appLogout(sessionToken) {
 
 export async function loadData() {
   try {
-    const r = await sbf(`/rest/v1/policies?org_id=eq.${ORG}&order=updated_at.desc&limit=1`);
-    if (!r.ok) { console.warn('[API] loadData failed:', r.status); return null; }
-    const rows = await r.json();
-    return rows[0]?.payload || null;
+    const session = readPersistedSession();
+    if (!session?.sessionToken) return null;
+    const result = await rpc('telnix_admin_get_payload', {
+      p_session_token: session.sessionToken,
+      p_org_id: ORG,
+    });
+    if (!result?.ok) {
+      console.warn('[API] loadData failed:', result?.error || 'Unknown error');
+      return null;
+    }
+    return result?.payload || null;
   } catch (e) { console.error('[API] loadData error:', e); return null; }
 }
 
@@ -110,24 +117,21 @@ export async function loadData() {
 // Extension only ever reads orderedPolicies — pendingPolicies are ignored by it
 export async function saveData() {
   try {
-    const check = await sbf(`/rest/v1/policies?org_id=eq.${ORG}&select=id`);
-    const rows  = check.ok ? await check.json() : [];
-    const ver   = Math.floor(Date.now() / 1000);
-
-    const r = rows.length > 0
-      ? await sbf(`/rest/v1/policies?org_id=eq.${ORG}`, {
-          method:  'PATCH',
-          headers: { 'Prefer': 'return=minimal' },
-          body:    JSON.stringify({ payload: D, version: ver, updated_at: new Date().toISOString() }),
-        })
-      : await sbf('/rest/v1/policies', {
-          method:  'POST',
-          headers: { 'Prefer': 'return=minimal' },
-          body:    JSON.stringify({ org_id: ORG, payload: D, version: ver }),
-        });
-
-    if (!r.ok) { const t = await r.text().catch(() => ''); console.error('[API] saveData failed:', r.status, t); }
-    return r.ok;
+    const session = readPersistedSession();
+    if (!session?.sessionToken) {
+      console.error('[API] saveData failed: missing admin session');
+      return false;
+    }
+    const result = await rpc('telnix_admin_save_payload', {
+      p_session_token: session.sessionToken,
+      p_org_id: ORG,
+      p_payload: D,
+    });
+    if (!result?.ok) {
+      console.error('[API] saveData failed:', result?.error || 'Unknown error');
+      return false;
+    }
+    return true;
   } catch (e) { console.error('[API] saveData error:', e); return false; }
 }
 
