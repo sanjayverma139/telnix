@@ -403,7 +403,7 @@ set search_path = public
 as $$
 declare
   v_admin record;
-  v_policy_id bigint;
+  v_policy_id uuid;
   v_version bigint := floor(extract(epoch from now()));
 begin
   select
