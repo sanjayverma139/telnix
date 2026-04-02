@@ -259,10 +259,19 @@ export async function fetchUserLogMap() {
 }
 
 export async function fetchKnownUserEmails() {
-  const logs = await fetchAdminLogs(5000).catch(() => []);
-  return [...new Set(
-    logs
-      .map(l => String(l?.user_email || '').trim().toLowerCase())
-      .filter(Boolean)
-  )].sort();
+  const [users, logs] = await Promise.all([
+    fetchAuthUsers().catch(() => null),
+    fetchAdminLogs(5000).catch(() => []),
+  ]);
+
+  const emails = new Set();
+  for (const user of users || []) {
+    const email = String(user?.email || '').trim().toLowerCase();
+    if (email) emails.add(email);
+  }
+  for (const log of logs || []) {
+    const email = String(log?.user_email || '').trim().toLowerCase();
+    if (email) emails.add(email);
+  }
+  return [...emails].sort();
 }
