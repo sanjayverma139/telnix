@@ -20,6 +20,14 @@ renderAppShell({
             <input type="password" id="cfg-gsb-key" placeholder="AIza...">
             <div style="font-size:10px;color:#475569;margin-top:-8px;margin-bottom:8px">Get a free key at <a href="https://console.cloud.google.com" target="_blank" style="color:#818cf8">console.cloud.google.com</a> -> Enable Safe Browsing API</div>
           </div>
+          <div>
+            <label style="display:flex;align-items:center;gap:8px">
+              <input type="checkbox" id="cfg-urlhaus-enabled" checked style="width:auto;margin:0">
+              <span>Enable URLhaus Reputation Check <span style="color:#475569;font-weight:400;text-transform:none">(recommended)</span></span>
+            </label>
+            <div style="font-size:10px;color:#475569;margin-top:6px;margin-bottom:8px">URLhaus by abuse.ch does not need an API key. The extension can check it in parallel with Google Safe Browsing.</div>
+            <input type="text" id="cfg-urlhaus-api-url" placeholder="https://urlhaus-api.abuse.ch/v1/url/">
+          </div>
           <div><label>Bypass Mode</label>
             <select id="cfg-bypass-mode" style="margin:0">
               <option value="local">Local only (codes stored in extension)</option>

@@ -11,6 +11,8 @@ export function loadConfigPage() {
   if (el('cfg-agent-id'))    el('cfg-agent-id').value    = cfg.agentId    || '';
   if (el('cfg-timezone'))    el('cfg-timezone').value    = cfg.timezone   || 'Asia/Kolkata';
   if (el('cfg-gsb-key'))     el('cfg-gsb-key').value     = cfg.gsbApiKey  || '';
+  if (el('cfg-urlhaus-enabled')) el('cfg-urlhaus-enabled').checked = cfg.urlhausEnabled !== false;
+  if (el('cfg-urlhaus-api-url')) el('cfg-urlhaus-api-url').value = cfg.urlhausApiUrl || 'https://urlhaus-api.abuse.ch/v1/url/';
   if (el('cfg-bypass-mode')) el('cfg-bypass-mode').value = cfg.bypassMode || 'local';
 }
 
@@ -19,10 +21,12 @@ async function saveConfig() {
   if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
 
   D.agentConfig = {
-    agentId:    $('cfg-agent-id')?.value.trim()     || '',
-    timezone:   $('cfg-timezone')?.value.trim()     || 'Asia/Kolkata',
-    gsbApiKey:  $('cfg-gsb-key')?.value.trim()      || '',
-    bypassMode: $('cfg-bypass-mode')?.value         || 'local',
+    agentId:        $('cfg-agent-id')?.value.trim()       || '',
+    timezone:       $('cfg-timezone')?.value.trim()       || 'Asia/Kolkata',
+    gsbApiKey:      $('cfg-gsb-key')?.value.trim()        || '',
+    urlhausEnabled: $('cfg-urlhaus-enabled')?.checked !== false,
+    urlhausApiUrl:  $('cfg-urlhaus-api-url')?.value.trim() || 'https://urlhaus-api.abuse.ch/v1/url/',
+    bypassMode:     $('cfg-bypass-mode')?.value           || 'local',
   };
 
   const ok = await saveData();
