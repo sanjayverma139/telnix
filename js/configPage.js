@@ -12,6 +12,7 @@ export function loadConfigPage() {
   if (el('cfg-timezone'))    el('cfg-timezone').value    = cfg.timezone   || 'Asia/Kolkata';
   if (el('cfg-gsb-key'))     el('cfg-gsb-key').value     = cfg.gsbApiKey  || '';
   if (el('cfg-urlhaus-enabled')) el('cfg-urlhaus-enabled').checked = cfg.urlhausEnabled !== false;
+  if (el('cfg-urlhaus-auth-key')) el('cfg-urlhaus-auth-key').value = cfg.urlhausAuthKey || '';
   if (el('cfg-urlhaus-api-url')) el('cfg-urlhaus-api-url').value = cfg.urlhausApiUrl || 'https://urlhaus-api.abuse.ch/v1/url/';
   if (el('cfg-bypass-mode')) el('cfg-bypass-mode').value = cfg.bypassMode || 'local';
 }
@@ -25,6 +26,7 @@ async function saveConfig() {
     timezone:       $('cfg-timezone')?.value.trim()       || 'Asia/Kolkata',
     gsbApiKey:      $('cfg-gsb-key')?.value.trim()        || '',
     urlhausEnabled: $('cfg-urlhaus-enabled')?.checked !== false,
+    urlhausAuthKey: $('cfg-urlhaus-auth-key')?.value.trim() || '',
     urlhausApiUrl:  $('cfg-urlhaus-api-url')?.value.trim() || 'https://urlhaus-api.abuse.ch/v1/url/',
     bypassMode:     $('cfg-bypass-mode')?.value           || 'local',
   };

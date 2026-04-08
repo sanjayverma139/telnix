@@ -25,7 +25,8 @@ renderAppShell({
               <input type="checkbox" id="cfg-urlhaus-enabled" checked style="width:auto;margin:0">
               <span>Enable URLhaus Reputation Check <span style="color:#475569;font-weight:400;text-transform:none">(recommended)</span></span>
             </label>
-            <div style="font-size:10px;color:#475569;margin-top:6px;margin-bottom:8px">URLhaus by abuse.ch does not need an API key. The extension can check it in parallel with Google Safe Browsing.</div>
+            <div style="font-size:10px;color:#475569;margin-top:6px;margin-bottom:8px">URLhaus now requires an Auth-Key. Add it here so the extension can check URLhaus in parallel with Google Safe Browsing.</div>
+            <input type="password" id="cfg-urlhaus-auth-key" placeholder="URLhaus Auth-Key">
             <input type="text" id="cfg-urlhaus-api-url" placeholder="https://urlhaus-api.abuse.ch/v1/url/">
           </div>
           <div><label>Bypass Mode</label>
