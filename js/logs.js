@@ -431,7 +431,43 @@ function openInvestigation(idx) {
             <div style="text-align:center"><div style="font-size:32px;font-weight:900;color:${sc};line-height:1">${score}</div><div style="font-size:9px;color:${mutedCol}">/100</div></div>
             <div><div style="font-size:13px;font-weight:700;color:${sc}">${sl}</div>${l.known_malicious?'<div style="font-size:11px;color:#f87171;margin-top:2px">⚠ Known Malicious Site</div>':''}</div>
           </div>
-        </div>`:''}`;
+        </div>
+        ${l.threat_signals&&l.threat_signals.length?row('Signals',Array.isArray(l.threat_signals)?l.threat_signals.join(', '):l.threat_signals,'#f87171'):''}
+        ${l.threat_summary?row('Threat Summary',l.threat_summary,'#fbbf24'):''}
+      `:''}
+      ${l.known_malicious||l.rep_source?`
+        <div style="font-size:10px;font-weight:800;color:${sectionCol};text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px">🔍 Reputation Intelligence</div>
+        ${(()=>{
+          const src = l.rep_source||'';
+          const srcLabel = src==='google_safe_browsing' ? '🟢 Google Safe Browsing'
+                         : src==='urlhaus'              ? '🟠 URLhaus (abuse.ch)'
+                         : src==='offline_db'           ? '⚫ Offline Threat DB'
+                         : src ? src : '—';
+          const srcColor = src==='google_safe_browsing' ? '#22c55e'
+                         : src==='urlhaus'              ? '#f97316'
+                         : src==='offline_db'           ? '#94a3b8'
+                         : '#64748b';
+          return row('Source', srcLabel, srcColor);
+        })()}
+        ${l.known_malicious?row('Verdict','⛔ Confirmed Malicious','#ef4444'):row('Verdict','Clean / Unknown','#22c55e')}
+        ${l.rep_threat_type||l.repThreatType?row('Threat Type',(l.rep_threat_type||l.repThreatType||'').replace(/_/g,' ').replace(/\w/g,c=>c.toUpperCase()),'#f87171'):''}
+        ${(()=>{
+          const conf = l.rep_confidence||l.repConfidence;
+          if(!conf) return '';
+          const pct = Math.round(conf*100)+'%';
+          const col = conf>=0.9?'#22c55e':conf>=0.7?'#f59e0b':'#ef4444';
+          return row('Confidence', pct, col);
+        })()}
+        ${l.urlhaus_ref||l.urlhausRef?'<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid '+lineCol+'"><span style="font-size:11px;color:'+mutedCol+';flex-shrink:0;margin-right:12px;font-weight:600">URLhaus Report</span><a href="'+(l.urlhaus_ref||l.urlhausRef)+'" target="_blank" style="font-size:12px;color:#60a5fa;text-decoration:none;font-weight:600">View on abuse.ch ↗</a></div>':''}
+        ${l.urlhaus_status||l.urlhausStatus?row('URL Status',(l.urlhaus_status||l.urlhausStatus||'').toUpperCase(),(l.urlhaus_status||l.urlhausStatus)==='online'?'#ef4444':'#f59e0b'):''}
+        ${(()=>{
+          const tags = l.urlhaus_tags||l.urlhausTags;
+          if(!tags||!tags.length) return '';
+          const tagArr = Array.isArray(tags)?tags:String(tags).split(',');
+          return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid '+lineCol+'"><span style="font-size:11px;color:'+mutedCol+';flex-shrink:0;margin-right:12px;font-weight:600">Malware Tags</span><div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end">'+tagArr.map(t=>'<span style="background:#ef444420;color:#ef4444;border:1px solid #ef444440;border-radius:4px;padding:1px 7px;font-size:10px;font-weight:700">'+esc(String(t).trim())+'</span>').join('')+'</div></div>';
+        })()}
+        ${l.urlhaus_date_added||l.urlhausDateAdded?row('First Reported',(l.urlhaus_date_added||l.urlhausDateAdded)||'—','#94a3b8'):''}
+      `:''}`;
     panel.classList.add('open');
     document.getElementById('inv-overlay')?.classList.add('open');
   });
